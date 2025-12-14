@@ -1,0 +1,85 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: '469654903224'
+  SERVICE_NAME: 'raju-agent'
+  REGION: 'us-central1'
+  IMAGE_NAME: 'gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg AGENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml || echo '0.0.0') \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          AGENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml || echo '0.0.0')
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --memory 4Gi \
+            --no-cpu-throttling \
+            --port 8080 \
+            --set-env-vars "COMMIT_SHA=${{ github.sha }}" \
+            --set-env-vars "AGENT_VERSION=${AGENT_VERSION}" \
+            --labels "created-by=github-actions,commit-sha=${{ github.sha }}"
+          
+          # Get the service URL and set it as API_BASE_URL
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          
+          # Update the service with API_BASE_URL
+          gcloud run services update ${{ env.SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --update-env-vars "API_BASE_URL=${SERVICE_URL}"
+          
+          echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_OUTPUT
+
+      - name: Output service URL
+        run: |
+          echo "Service deployed at: ${{ steps.deploy.outputs.SERVICE_URL }}"
+

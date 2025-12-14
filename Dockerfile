@@ -22,6 +22,10 @@ COPY ./pyproject.toml ./README.md ./uv.lock* ./
 
 COPY ./app ./app
 
+# Create static files directory and copy frontend
+RUN mkdir -p /code/static
+COPY ./index.html /code/static/index.html
+
 RUN uv sync --frozen
 
 ARG COMMIT_SHA=""

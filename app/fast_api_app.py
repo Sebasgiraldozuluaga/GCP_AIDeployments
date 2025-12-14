@@ -14,6 +14,8 @@
 
 import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from google.adk.cli.fast_api import get_fast_api_app
 from app.app_utils.typing import Feedback
 
@@ -40,6 +42,31 @@ app: FastAPI = get_fast_api_app(
 )
 app.title = "raju-shop"
 app.description = "API for interacting with the Agent raju-shop"
+
+# Serve static files
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    """Serve the frontend index.html file with environment variables injected."""
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        # Inject API_BASE_URL from environment variable if available
+        api_base_url = os.getenv("API_BASE_URL", "")
+        if api_base_url:
+            # Inject meta tag in head section
+            meta_tag = f'    <meta name="api-base-url" content="{api_base_url}">\n'
+            html_content = html_content.replace("</head>", meta_tag + "</head>")
+        
+        return HTMLResponse(content=html_content)
+    return HTMLResponse(content="<html><body>Frontend not found</body></html>", status_code=404)
 
 
 @app.post("/feedback")

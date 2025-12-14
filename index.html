@@ -414,7 +414,11 @@
 
     <script>
         // Configuration
-        const API_BASE_URL = 'https://raju-agent-469654903224.us-central1.run.app';
+        // Read API_BASE_URL from meta tag (injected by server) or use current origin as fallback
+        const apiBaseUrlMeta = document.querySelector('meta[name="api-base-url"]');
+        const API_BASE_URL = apiBaseUrlMeta 
+            ? apiBaseUrlMeta.getAttribute('content') 
+            : (window.API_BASE_URL || window.location.origin);
         const APP_NAME = 'app';
         const USER_ID = 'web-user';
 
