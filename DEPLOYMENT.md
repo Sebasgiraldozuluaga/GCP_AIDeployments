@@ -106,31 +106,44 @@ El JSON debe verse así (nota que el `private_key` incluye las líneas completas
 
 **⚠️ IMPORTANTE - Cómo copiar el JSON correctamente:**
 
-1. **Abre el archivo** `github-actions-key.json` en un editor de texto plano (VS Code, Notepad++, etc.)
+El JSON del service account key **DEBE estar en una sola línea** cuando lo pegues en GitHub. Los saltos de línea reales causan errores.
+
+**Opción 1: Convertir a una sola línea (Recomendado)**
+
+```bash
+# Convertir el JSON a una sola línea (elimina saltos de línea)
+cat github-actions-key.json | jq -c . > github-actions-key-single-line.json
+
+# O usando Python
+python3 -c "import json; print(json.dumps(json.load(open('github-actions-key.json'))))" > github-actions-key-single-line.json
+
+# Luego copia el contenido de github-actions-key-single-line.json
+cat github-actions-key-single-line.json
+```
+
+**Opción 2: Copiar manualmente (si no tienes jq o Python)**
+
+1. **Abre el archivo** `github-actions-key.json` en un editor de texto plano
    - ❌ NO uses Word, Google Docs, o editores que modifiquen el formato
-   - ✅ Usa editores de texto plano
+   - ✅ Usa VS Code, Notepad++, o similar
 
-2. **Selecciona TODO el contenido** (Ctrl+A / Cmd+A)
+2. **Reemplaza todos los saltos de línea:**
+   - En VS Code: Buscar y reemplazar (Ctrl+H)
+   - Buscar: `\n` (con la opción de regex activada)
+   - Reemplazar: (dejar vacío) o usar un espacio
+   - O simplemente selecciona todo y elimina los saltos de línea manualmente
 
-3. **Copia TODO** (Ctrl+C / Cmd+C)
-   - Debe incluir desde el primer `{` hasta el último `}`
-   - Debe ser un JSON válido de una sola línea o múltiples líneas
+3. **El resultado debe ser UNA SOLA LÍNEA** que comience con `{` y termine con `}`
 
-4. **Pega en GitHub** (Ctrl+V / Cmd+V)
-   - GitHub acepta el JSON en cualquier formato (una línea o múltiples líneas)
-   - NO agregues espacios antes o después
-   - NO modifiques el contenido
+4. **Copia esa línea completa** y pégala en GitHub
 
 5. **Verifica que el JSON sea válido:**
-   - El campo `private_key` debe incluir **completas** las líneas:
-     - `-----BEGIN PRIVATE KEY-----` al inicio
-     - `-----END PRIVATE KEY-----` al final
-   - Entre estas líneas habrá múltiples líneas de caracteres codificados
-   - Los saltos de línea están representados como `\n` en el JSON
+   - El campo `private_key` debe tener `\n` (texto literal, no saltos de línea reales)
+   - Ejemplo: `"private_key": "-----BEGIN PRIVATE KEY-----\\nMIIE...\\n-----END PRIVATE KEY-----\\n"`
 
 **Si tienes problemas:**
-- Verifica que el archivo JSON sea válido: `cat github-actions-key.json | python3 -m json.tool`
-- Asegúrate de copiar TODO el contenido, sin omitir ninguna parte
+- Verifica que el JSON sea válido: `cat github-actions-key.json | python3 -m json.tool`
+- Asegúrate de que esté en UNA SOLA LÍNEA sin saltos de línea reales
 - No agregues comillas adicionales alrededor del JSON
 
 ### 3. Agregar el Secret `GOOGLE_API_KEY`
