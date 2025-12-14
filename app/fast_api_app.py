@@ -43,13 +43,31 @@ app: FastAPI = get_fast_api_app(
 app.title = "raju-shop"
 app.description = "API for interacting with the Agent raju-shop"
 
+# Disable FastAPI documentation to prevent it from showing on root
+app.docs_url = None
+app.redoc_url = None
+app.openapi_url = None
+
 # Serve static files
 static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+# Remove any existing root route that might have been added by get_fast_api_app
+# This ensures our custom route takes precedence
+routes_to_remove = []
+for route in app.routes:
+    if hasattr(route, 'path') and route.path == "/":
+        # Check if it's a GET route (documentation routes are usually GET)
+        if hasattr(route, 'methods') and 'GET' in route.methods:
+            # Skip our own route if it's already there
+            if not (hasattr(route, 'endpoint') and hasattr(route.endpoint, '__name__') and route.endpoint.__name__ == 'read_root'):
+                routes_to_remove.append(route)
 
-@app.get("/", response_class=HTMLResponse)
+for route in routes_to_remove:
+    app.routes.remove(route)
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def read_root():
     """Serve the frontend index.html file with environment variables injected."""
     static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
