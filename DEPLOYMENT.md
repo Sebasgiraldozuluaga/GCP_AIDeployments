@@ -62,18 +62,11 @@ gcloud projects add-iam-policy-binding 469654903224 \
 gcloud iam service-accounts keys create github-actions-key.json \
     --iam-account=${SA_EMAIL}
 
-# Validar que el JSON es correcto
-cat github-actions-key.json | python3 -m json.tool > /dev/null && echo "✅ JSON válido" || echo "❌ JSON inválido"
-
 # Mostrar el contenido (copiar todo el JSON)
 cat github-actions-key.json
 ```
 
-**⚠️ IMPORTANTE:** 
-- Guarda este archivo de forma segura. Contiene credenciales sensibles.
-- **NO** edites el archivo JSON manualmente
-- **NO** agregues saltos de línea adicionales
-- Copia el JSON **exactamente** como viene del archivo
+**⚠️ IMPORTANTE:** Guarda este archivo de forma segura. Contiene credenciales sensibles.
 
 ## Configuración de GitHub Secrets
 
@@ -104,47 +97,13 @@ El JSON debe verse así (nota que el `private_key` incluye las líneas completas
 }
 ```
 
-**⚠️ IMPORTANTE - Cómo copiar el JSON correctamente:**
-
-El JSON del service account key **DEBE estar en una sola línea** cuando lo pegues en GitHub. Los saltos de línea reales causan errores.
-
-**Opción 1: Convertir a una sola línea (Recomendado)**
-
-```bash
-# Convertir el JSON a una sola línea (elimina saltos de línea)
-cat github-actions-key.json | jq -c . > github-actions-key-single-line.json
-
-# O usando Python
-python3 -c "import json; print(json.dumps(json.load(open('github-actions-key.json'))))" > github-actions-key-single-line.json
-
-# Luego copia el contenido de github-actions-key-single-line.json
-cat github-actions-key-single-line.json
-```
-
-**Opción 2: Copiar manualmente (si no tienes jq o Python)**
-
-1. **Abre el archivo** `github-actions-key.json` en un editor de texto plano
-   - ❌ NO uses Word, Google Docs, o editores que modifiquen el formato
-   - ✅ Usa VS Code, Notepad++, o similar
-
-2. **Reemplaza todos los saltos de línea:**
-   - En VS Code: Buscar y reemplazar (Ctrl+H)
-   - Buscar: `\n` (con la opción de regex activada)
-   - Reemplazar: (dejar vacío) o usar un espacio
-   - O simplemente selecciona todo y elimina los saltos de línea manualmente
-
-3. **El resultado debe ser UNA SOLA LÍNEA** que comience con `{` y termine con `}`
-
-4. **Copia esa línea completa** y pégala en GitHub
-
-5. **Verifica que el JSON sea válido:**
-   - El campo `private_key` debe tener `\n` (texto literal, no saltos de línea reales)
-   - Ejemplo: `"private_key": "-----BEGIN PRIVATE KEY-----\\nMIIE...\\n-----END PRIVATE KEY-----\\n"`
-
-**Si tienes problemas:**
-- Verifica que el JSON sea válido: `cat github-actions-key.json | python3 -m json.tool`
-- Asegúrate de que esté en UNA SOLA LÍNEA sin saltos de línea reales
-- No agregues comillas adicionales alrededor del JSON
+**⚠️ IMPORTANTE:** 
+- El campo `private_key` debe incluir **completas** las líneas:
+  - `-----BEGIN PRIVATE KEY-----` al inicio
+  - `-----END PRIVATE KEY-----` al final
+- Entre estas líneas habrá múltiples líneas de caracteres codificados
+- Los saltos de línea están representados como `\n` en el JSON
+- Copia el JSON **completo** tal como viene del archivo, sin modificaciones
 
 ### 3. Agregar el Secret `GOOGLE_API_KEY`
 
@@ -258,36 +217,6 @@ El frontend estará disponible en la URL del servicio (ej: `https://raju-agent-4
 ```
 
 ## Solución de Problemas
-
-### Error: "failed to parse service account key JSON credentials" o "unexpected token"
-
-Este error indica que el secret `GCP_SA_KEY` no tiene un formato JSON válido.
-
-**Solución:**
-
-1. **Verifica que el JSON sea válido localmente:**
-   ```bash
-   cat github-actions-key.json | python3 -m json.tool
-   ```
-   Si esto falla, el archivo está corrupto. Crea una nueva clave:
-   ```bash
-   gcloud iam service-accounts keys create github-actions-key.json \
-       --iam-account=github-actions-sa@469654903224.iam.gserviceaccount.com
-   ```
-
-2. **Asegúrate de copiar el JSON completo:**
-   - Abre el archivo en un editor de texto plano (VS Code, Notepad++)
-   - Selecciona TODO (Ctrl+A)
-   - Copia TODO (Ctrl+C)
-   - Pega en GitHub sin modificar nada
-
-3. **Verifica en GitHub:**
-   - Ve a Settings → Secrets and variables → Actions
-   - Edita el secret `GCP_SA_KEY`
-   - Asegúrate de que no haya espacios antes o después del JSON
-   - Asegúrate de que comience con `{` y termine con `}`
-
-4. **El workflow ahora valida el JSON automáticamente** y te mostrará un error más claro si hay problemas.
 
 ### Error: "Permission denied"
 
