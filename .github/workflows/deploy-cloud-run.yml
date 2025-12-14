@@ -6,10 +6,11 @@ on:
       - main
 
 env:
-  PROJECT_ID: '469654903224'
+  PROJECT_ID: 'aidevelopments'
   SERVICE_NAME: 'raju-agent'
   REGION: 'us-central1'
-  IMAGE_NAME: 'gcr.io/469654903224/raju-agent'
+  REPOSITORY: 'raju-agent'
+  IMAGE_NAME: 'us-central1-docker.pkg.dev/aidevelopments/raju-agent/raju-agent'
 
 jobs:
   deploy:
@@ -32,8 +33,16 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker --quiet
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="Docker repository for raju-agent" \
+            --quiet || true
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build Docker image
         env:
