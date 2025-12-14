@@ -20,7 +20,7 @@ from google.adk.cli.fast_api import get_fast_api_app
 from app.app_utils.typing import Feedback
 
 allow_origins = (
-    os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else [*]
+    os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else ["*"]
 )
 
 # Artifact bucket for ADK (created by Terraform, passed via env var)
