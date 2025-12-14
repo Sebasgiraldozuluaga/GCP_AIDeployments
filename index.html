@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raju's Royal Artifacts</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tangerine:wght@700&family=Lato:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #FF6B6B; /* Pinkish-Red */
+            --secondary-color: #FFA500; /* Orange */
+            --background-color: #FFF8E1; /* Light Cream */
+            --text-color: #4A4A4A;
+            --header-text-color: #FFFFFF;
+            --user-message-bg: #E0E0E0;
+            --agent-message-bg: #FFE0B2; /* Light Orange */
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: var(--header-text-color);
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-bottom: 4px solid var(--secondary-color);
+        }
+
+        header h1 {
+            margin: 0;
+            font-family: 'Tangerine', cursive;
+            font-size: 4rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            width: 95%;
+            margin: 1.5rem auto;
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #messages {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 0.75rem 1.25rem;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Ensures newlines from agent are respected */
+        }
+
+        .user-message {
+            background-color: var(--user-message-bg);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .agent-message {
+            background-color: var(--agent-message-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .agent-message.loading::after {
+            content: '...';
+            display: inline-block;
+            animation: loading-dots 1.4s infinite;
+        }
+
+        @keyframes loading-dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        #chat-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #E0E0E0;
+            background-color: #F9F9F9;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            transition: border-color 0.3s;
+        }
+
+        #message-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        #send-button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #send-button:hover:not(:disabled) {
+            background-color: #E55A5A;
+        }
+
+        #send-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Raju's Royal Artifacts</h1>
+    </header>
+
+    <div id="chat-container">
+        <div id="messages">
+            <!-- Chat messages will be appended here -->
+        </div>
+        <form id="chat-form">
+            <input type="text" id="message-input" placeholder="Ask about our artifacts..." autocomplete="off" required>
+            <button type="submit" id="send-button">Send</button>
+        </form>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const AGENT_BASE_URL = "https://raju-agent-469654903224.us-central1.run.app";
+
+        // --- DOM Elements ---
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const messagesContainer = document.getElementById('messages');
+
+        // --- State ---
+        let sessionId = null;
+
+        // --- Helper Functions ---
+
+        /**
+         * Appends a message to the chat window.
+         * @param {string} text - The message content.
+         * @param {'user' | 'agent'} sender - The sender of the message.
+         * @returns {HTMLElement} The created message element.
+         */
+        function appendMessage(text, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${sender}-message`);
+            messageElement.textContent = text;
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll
+            return messageElement;
+        }
+
+        /**
+         * Disables the chat input and send button.
+         */
+        function disableInput() {
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+        }
+
+        /**
+         * Enables the chat input and send button.
+         */
+        function enableInput() {
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+
+        // --- API Interaction ---
+
+        /**
+         * Initializes a new chat session with the agent.
+         */
+        async function initializeSession() {
+            appendMessage("Connecting to Raju's stall...", 'agent');
+            disableInput();
+
+            try {
+                const response = await fetch(`${AGENT_BASE_URL}/sessions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        appName: "app",
+                        userId: "web-user"
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`);
+                }
+
+                const data = await response.json();
+                sessionId = data.sessionId;
+                console.log('Session initialized:', sessionId);
+                
+                // Update the initial message to show success
+                const connectingMsg = messagesContainer.querySelector('.agent-message');
+                if (connectingMsg) {
+                    connectingMsg.textContent = "Welcome to Raju's Royal Artifacts! How may I assist you today?";
+                }
+                enableInput();
+
+            } catch (error) {
+                console.error('Failed to initialize session:', error);
+                const connectingMsg = messagesContainer.querySelector('.agent-message');
+                if (connectingMsg) {
+                    connectingMsg.textContent = "Sorry, we couldn't connect to the stall. Please refresh the page to try again.";
+                }
+            }
+        }
+
+        /**
+         * Sends a user's message to the agent and displays the response.
+         * @param {string} text - The user's message.
+         */
+        async function sendMessage(text) {
+            if (!sessionId || !text.trim()) return;
+
+            appendMessage(text, 'user');
+            messageInput.value = '';
+            disableInput();
+
+            const loadingMessage = appendMessage("Raju is thinking", 'agent');
+            loadingMessage.classList.add('loading');
+
+            try {
+                const response = await fetch(`${AGENT_BASE_URL}/sessions/${sessionId}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`);
+                }
+
+                const data = await response.json();
+                // The agent's reply is typically in the 'output.text' field
+                const agentReply = data.output?.text || "I'm not sure how to respond to that.";
+                
+                loadingMessage.textContent = agentReply;
+                loadingMessage.classList.remove('loading');
+
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                loadingMessage.textContent = "Apologies, there was a problem communicating. Please try again.";
+                loadingMessage.classList.remove('loading');
+            } finally {
+                enableInput();
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Handle form submission
+        chatForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            sendMessage(messageInput.value);
+        });
+
+        // Initialize the chat when the page loads
+        document.addEventListener('DOMContentLoaded', initializeSession);
+
+    </script>
+</body>
+</html>
