@@ -1,0 +1,13 @@
+{
+    "appName": "app",
+    "userId": "web-user",
+    "session_id": "bf620ed4-8828-4a69-a7f9-1d832dcd18d8",
+    "newMessage": {
+        "role": "user",
+        "parts": [
+            {
+                "text": "Hello, what artifacts do you have?"
+            }
+        ]
+    }
+}
