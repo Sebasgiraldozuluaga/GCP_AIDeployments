@@ -105,10 +105,25 @@ El JSON debe verse así (nota que el `private_key` incluye las líneas completas
 - Los saltos de línea están representados como `\n` en el JSON
 - Copia el JSON **completo** tal como viene del archivo, sin modificaciones
 
-### 3. Verificar Secrets configurados
+### 3. Agregar el Secret `GOOGLE_API_KEY`
 
-Debes tener al menos este secret configurado:
-- ✅ `GCP_SA_KEY` - Clave JSON del Service Account
+Si estás usando Google AI Studio (en lugar de Vertex AI), necesitas agregar tu API key de Gemini:
+
+1. **Name:** `GOOGLE_API_KEY`
+2. **Secret:** Tu API key de Google Gemini
+
+**Para obtener tu API key:**
+- Ve a [Google AI Studio](https://aistudio.google.com/app/apikey)
+- Crea una nueva API key o copia una existente
+- Pega el valor completo en el secret
+
+**Nota:** Si estás usando Vertex AI (recomendado para Cloud Run), no necesitas este secret ya que usa la autenticación de GCP automáticamente.
+
+### 4. Verificar Secrets configurados
+
+Debes tener configurados los siguientes secrets:
+- ✅ `GCP_SA_KEY` - Clave JSON del Service Account (requerido)
+- ✅ `GOOGLE_API_KEY` - API key de Gemini (requerido si usas AI Studio, opcional si usas Vertex AI)
 
 ## Configuración del Workflow
 

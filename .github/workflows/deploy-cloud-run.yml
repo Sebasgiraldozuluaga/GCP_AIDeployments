@@ -71,11 +71,15 @@ jobs:
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
           
-          # Update the service with API_BASE_URL
+          # Update the service with API_BASE_URL and GOOGLE_API_KEY (if provided)
+          ENV_VARS="API_BASE_URL=${SERVICE_URL}"
+          if [ -n "${{ secrets.GOOGLE_API_KEY }}" ]; then
+            ENV_VARS="${ENV_VARS},GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}"
+          fi
           gcloud run services update ${{ env.SERVICE_NAME }} \
             --platform managed \
             --region ${{ env.REGION }} \
-            --update-env-vars "API_BASE_URL=${SERVICE_URL}"
+            --update-env-vars "${ENV_VARS}"
           
           echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_OUTPUT
 
