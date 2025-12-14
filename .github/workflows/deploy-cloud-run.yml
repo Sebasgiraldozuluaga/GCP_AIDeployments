@@ -37,12 +37,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build \
-            --build-arg COMMIT_SHA=${{ github.sha }} \
-            --build-arg AGENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml || echo '0.0.0') \
-            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -t ${{ env.IMAGE_NAME }}:latest \
-            .
+          AGENT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml || echo '0.0.0')
+          docker build --build-arg COMMIT_SHA=${{ github.sha }} --build-arg AGENT_VERSION=${AGENT_VERSION} -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
 
       - name: Push Docker image
         run: |
