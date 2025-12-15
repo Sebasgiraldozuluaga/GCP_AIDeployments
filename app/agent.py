@@ -25,7 +25,7 @@ import google.auth
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import create_sql_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_vertexai import ChatVertexAI
 
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
@@ -53,8 +53,10 @@ def get_sql_agent():
         db = SQLDatabase.from_uri(connection_string)
         
         # Use Gemini as the LLM for the SQL agent (via Vertex AI)
-        llm = ChatGoogleGenerativeAI(
+        llm = ChatVertexAI(
             model="gemini-2.0-flash-001",
+            project=project_id,
+            location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
         )
         
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
