@@ -29,7 +29,7 @@ from langchain_google_vertexai import ChatVertexAI
 
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # PostgreSQL Database Connection
@@ -54,7 +54,7 @@ def get_sql_agent():
         
         # Use Gemini as the LLM for the SQL agent (via Vertex AI)
         llm = ChatVertexAI(
-            model="gemini-2.0-flash-001",
+            model="gemini-2.5-pro",
             project=project_id,
             location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
         )
