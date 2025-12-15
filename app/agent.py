@@ -27,10 +27,10 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import create_sql_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-#_, project_id = google.auth.default()
-#os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-#os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
-#os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+_, project_id = google.auth.default()
+os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # PostgreSQL Database Connection
 def get_postgres_connection_string():
@@ -52,10 +52,9 @@ def get_sql_agent():
         connection_string = get_postgres_connection_string()
         db = SQLDatabase.from_uri(connection_string)
         
-        # Use Gemini as the LLM for the SQL agent
+        # Use Gemini as the LLM for the SQL agent (via Vertex AI)
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash-001",
-            google_api_key=os.getenv("GOOGLE_API_KEY"),
         )
         
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
