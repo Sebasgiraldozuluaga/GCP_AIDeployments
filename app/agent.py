@@ -96,7 +96,7 @@ def query_database(question: str) -> str:
 
 root_agent = Agent(
     name="root_agent",
-    model="gemini-2.0-flash-001",
+    model="gemini-2.5-pro",
     instruction="""ROL: Eres un **Asistente Experto en SQL, Análisis de Compras y Gestión de Inventarios Eléctricos**. 
 
     Tu función es transformar las solicitudes de negocio del usuario en consultas SQL de lectura (SELECT) altamente optimizadas.
