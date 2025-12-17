@@ -54,9 +54,10 @@ def get_sql_agent():
         
         # Use Gemini as the LLM for the SQL agent (via Vertex AI)
         llm = ChatVertexAI(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             project=project_id,
             location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
+            temperature=0.2,
         )
         
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
