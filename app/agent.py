@@ -97,7 +97,7 @@ def query_database(question: str) -> str:
 
 root_agent = Agent(
     name="root_agent",
-    model="gemini-2.5-pro",
+    model="gemini-2.5-flash",
     instruction="""ROL: Eres un **Asistente Experto en SQL, Análisis de Compras y Gestión de Inventarios Eléctricos**. 
 
     Tu función es transformar las solicitudes de negocio del usuario en consultas SQL de lectura (SELECT) altamente optimizadas.
@@ -120,15 +120,55 @@ root_agent = Agent(
 
     TABLAS CLAVE:
 
-    - **factura**: (ID: factura_id) Clave para la fecha de compra. Columnas: **factura_id**, **fecha_emision** (usar como fecha de compra), project_id.
+    - **factura**: (PK: factura_id BIGINT) Clave para la fecha de compra.
+      Columnas: **factura_id**, **numero** (número de factura), cufe, **fecha_emision** (TIMESTAMP - usar como fecha de compra), fecha_vencimiento (DATE), moneda, orden_compra, pedido, vendedor_nombre, vendedor_email, vendedor_telefono, **proveedor_id** (FK a proveedor), cliente_id, total_subtotal (NUMERIC), total_iva (NUMERIC), total_retefuente (NUMERIC), total_factura (NUMERIC), raw_xml, raw_pdf, origen_archivo, email_de, email_fecha, **project_id** (FK a projects).
 
-    - **factura_detalle**: (ID: detalle_id) Contiene los ítems y precios. Columnas: **factura_id** (FK), **cod_interno**, **descripcion**, **cantidad** (comprada), **precio_unitario**.
+    - **factura_detalle**: (PK: detalle_id BIGINT) Contiene los ítems y precios de cada factura.
+      Columnas: **detalle_id**, **factura_id** (FK a factura), linea (orden del ítem), **cod_interno**, **descripcion**, **cantidad** (NUMERIC - cantidad comprada), **unidad**, **precio_unitario** (NUMERIC), descuento_pct (NUMERIC), subtotal (NUMERIC), iva_pct (NUMERIC), iva_valor (NUMERIC), total_linea (NUMERIC), std_scheme_id, std_scheme_name, std_code, **descripcion_estandarizada**, score_match_aceptado, **producto_estandarizado**, validado_manualmente (BOOLEAN).
 
-    - **producto_catalogo**: (ID: producto_id) Catálogo maestro. Columnas: **cod_interno**, **descripcion**, proveedor_id.
+    - **producto_catalogo**: (PK: producto_id BIGINT) Catálogo maestro de productos.
+      Columnas: **producto_id**, **cod_interno**, std_code, std_scheme_id, std_scheme_name, **descripcion**, unidad, **proveedor_id** (FK a proveedor), first_seen_at (TIMESTAMP), last_seen_at (TIMESTAMP).
 
-    - **flujo_productos**: (ID: id) Movimientos físicos. Columnas: **project_id** (FK), **producto** (contiene descripción del ítem), **cantidad**,**unidad (Usar siempre esta columna para conocer la unidad del movimiento)**,**sent_date** (fecha del movimiento).
+    - **flujo_productos**: (PK: id INT) Movimientos físicos de productos.
+      Columnas: **id**, **producto** (TEXT - descripción del ítem), **cantidad** (NUMERIC), **unidad** (TEXT - USAR SIEMPRE esta columna para conocer la unidad del movimiento), db_type, **sent_date** (TIMESTAMP - fecha del movimiento), metadata_id, **project_id** (FK a projects).
 
-    - **projects**: Referencia de proyectos. Columnas: **project_id**, **nombre_proyecto**.
+    - **projects**: (PK: project_id INT) Referencia de proyectos.
+      Columnas: **project_id**, **nombre_proyecto** (VARCHAR), created_at (TIMESTAMP).
+    
+    - **proveedor**: (PK: proveedor_id BIGINT) Referencia de proveedores.
+      Columnas: **proveedor_id**, **nit**, **razon_social** (usar como nombre del proveedor), telefono, email, direccion, ciudad, email_cotizaciones.
+
+    - **cliente**: (PK: cliente_id BIGINT) Referencia de clientes.
+      Columnas: **cliente_id**, **nit**, **razon_social**, telefono, email, direccion, ciudad.
+
+    - **inventario**: (PK: id INT) Stock actual por proyecto.
+      Columnas: **id**, **project_id** (FK a projects), **referencia**, **grupo**, **descripcion**, **unidad**, **cantidad** (NUMERIC - stock actual), created_at, update (DATE).
+
+    - **presupuesto**: (PK: id INT) Presupuesto de materiales por proyecto.
+      Columnas: **id**, **project_id** (FK a projects), **codigo**, **grupo**, **descripcion**, **unidad**, **cantidad** (NUMERIC - cantidad presupuestada), **precio** (NUMERIC), created_at.
+
+    - **orden_compra**: (PK: id BIGINT) Órdenes de compra.
+      Columnas: **id**, **orden_compra** (BIGINT - número de OC), **proyecto** (TEXT), **project_id** (FK a projects), created_at.
+
+    - **requerimientos**: (PK: id INT) Solicitudes de materiales recibidas por email.
+      Columnas: **id**, email_notification_id, **item**, **centro_costos**, **descripcion_tecnica**, **unidad**, **cantidad** (NUMERIC), **fecha_solicitud** (TIMESTAMP), **fecha_requerida** (TIMESTAMP), observaciones, **obra_proyecto**, **project_id** (FK a projects), project_match_confidence, sender_email, received_datetime, processed (BOOLEAN), raw_data (JSONB), referencia_url.
+
+    - **solicitudes_pedidos**: (PK: id BIGINT) Pedidos solicitados vía Telegram.
+      Columnas: **id**, **producto** (TEXT), **cantidad** (NUMERIC), **unidad**, referencia_url, **telegram_user_id**, **telegram_first_name**, validado (BOOLEAN), created_at, **project_id** (FK a projects), **approved** (BOOLEAN), approved_by, approved_at, batch_id, sent_to_compras (BOOLEAN), sent_at, requerimiento_id, email_message_id.
+
+    - **cotizaciones**: (PK: cotizacion_id INT) Solicitudes de cotización a proveedores.
+      Columnas: **cotizacion_id**, **project_id** (FK a projects), **nombre_proyecto**, descripcion, **estado** (TEXT - estado de la cotización), created_by, created_at, updated_at, enviada_at, respondida_at.
+
+    - **cotizaciones_detalle**: (PK: id INT) Ítems de cada cotización.
+      Columnas: **id**, **cotizacion_id** (FK a cotizaciones), **descripcion_original**, **producto_estandarizado**, referencia_inventario, **cantidad** (NUMERIC), **unidad**, score_match, observaciones, created_at, **grupo**.
+
+    - **almacenistas**: (PK: id INT) Asignación de almacenistas y líderes por proyecto.
+      Columnas: **id**, **project_id** (FK a projects), **project** (TEXT - nombre), **almacenista_telegram_id**, **almacenista_name**, **lider_telegram_id**, **lider_name**, created_at.
+
+    - **producto_conversion_unidad**: (PK: conversion_id BIGINT) Conversiones de unidades para productos.
+      Columnas: **conversion_id**, **producto_estandarizado_pattern** (TEXT - patrón de producto), descripcion_pattern, **unidad_origen**, **unidad_destino**, **factor_conversion** (NUMERIC), descripcion_conversion, activo (BOOLEAN), created_at, updated_at.
+        
+    -*
 
     # REGLAS DE NEGOCIO Y LÓGICA DE CONSULTA ESPECÍFICA
 
