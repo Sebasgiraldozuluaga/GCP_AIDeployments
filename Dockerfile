@@ -24,9 +24,6 @@ COPY . .
 
 # Create static files directory and copy frontend
 RUN mkdir -p /code/static
-COPY ./index.html /code/static/index.html
-# Copy images used by the frontend
-COPY ./images /code/static/images
 
 RUN uv sync --frozen
 
