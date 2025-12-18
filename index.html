@@ -92,7 +92,7 @@
     <header class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <img src="/images/logo-i-serv.png" alt="I-SERV Logo" class="h-12">
+                <img src="/images/LOGO-I-SERV.png" alt="I-SERV Logo" class="h-12">
                 <div>
                     <h1 class="text-xl font-bold text-iserv-black">I-SERV BOT</h1>
                     <p class="text-sm text-gray-500">Asistente Virtual Interno</p>
@@ -348,6 +348,15 @@
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
+
+        // Enter = enviar | Shift + Enter = nueva línea
+        messageInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();       // evita salto de línea
+                form.requestSubmit();    // dispara el submit existente
+            }
+        });
+
 
         // Handle form submission
         form.addEventListener('submit', function(e) {
