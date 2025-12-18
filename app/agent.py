@@ -75,6 +75,10 @@ def get_sql_agent():
         )
     return _sql_agent
 
+def sumar(a: int ,b: int)-> int:
+    return a+b
+
+
 def query_database(question: str) -> str:
     """
     Query the PostgreSQL database using natural language.
@@ -230,7 +234,7 @@ root_agent = Agent(
 
     Usa la herramienta `query_database` para ejecutar consultas en la base de datos PostgreSQL.
     """,
-    tools=[query_database],
+    tools=[query_database,sumar]
 )
 
 app = App(root_agent=root_agent, name="app")
