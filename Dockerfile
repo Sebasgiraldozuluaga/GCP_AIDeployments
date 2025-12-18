@@ -20,7 +20,7 @@ WORKDIR /code
 
 COPY ./pyproject.toml ./README.md ./uv.lock* ./
 
-COPY ./app ./app
+COPY ./app ./app 
 
 # Create static files directory and copy frontend
 RUN mkdir -p /code/static
