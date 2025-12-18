@@ -1,302 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raju's Royal Artifacts - Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Cinzel:wght@700&display=swap"
-        rel="stylesheet">
+    <title>I-SERV BOT - Chatbot Interno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'iserv-green': '#009639',
+                        'iserv-dark-green': '#00843D',
+                        'iserv-black': '#1a1a1a',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #ff9a56 0%, #ff6b9d 50%, #ffa07a 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Decorative patterns */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, .05) 35px, rgba(255, 255, 255, .05) 70px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, .03) 35px, rgba(255, 255, 255, .03) 70px);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ff6b9d 100%);
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border-bottom: 6px solid #ffd700;
-            position: relative;
-            z-index: 10;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            color: rgba(255, 215, 0, 0.3);
-            font-size: 2rem;
-            letter-spacing: 2rem;
-            animation: sparkle 3s infinite;
-        }
-
-        @keyframes sparkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-            }
-
-            50% {
-                opacity: 0.8;
-            }
-        }
-
-        .header h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 3rem;
-            color: #fff;
-            text-shadow:
-                3px 3px 0 #ff1493,
-                6px 6px 0 rgba(0, 0, 0, 0.3),
-                0 0 30px rgba(255, 215, 0, 0.5);
-            letter-spacing: 3px;
-            margin-bottom: 0.5rem;
-            position: relative;
-            z-index: 2;
-        }
-
-        .header .subtitle {
-            font-size: 1.1rem;
-            color: #ffe4b5;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-            position: relative;
-            z-index: 2;
-        }
-
-        /* Decorative border */
-        .decorative-border {
-            height: 8px;
-            background: repeating-linear-gradient(90deg,
-                    #ffd700 0px,
-                    #ffd700 20px,
-                    #ff1493 20px,
-                    #ff1493 40px,
-                    #ff6b35 40px,
-                    #ff6b35 60px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Chat Container */
+        
         .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 900px;
-            width: 100%;
-            margin: 2rem auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.4),
-                inset 0 0 0 3px #ffd700;
-            overflow: hidden;
-            position: relative;
-            z-index: 10;
+            height: calc(100vh - 80px);
         }
-
-        /* Messages Area */
-        .messages {
-            flex: 1;
+        
+        .messages-container {
+            height: calc(100% - 80px);
             overflow-y: auto;
-            padding: 2rem;
-            background: linear-gradient(to bottom, #fff9f0 0%, #fff 100%);
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            scroll-behavior: smooth;
+        }
+        
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #009639;
+            border-radius: 3px;
         }
 
-        .messages::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        .messages::-webkit-scrollbar-track {
-            background: #ffe4b5;
-            border-radius: 10px;
-        }
-
-        .messages::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #ff6b35, #ff1493);
-            border-radius: 10px;
-        }
-
-        /* Message Bubbles */
-        .message {
-            display: flex;
-            gap: 0.75rem;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            flex-direction: row-reverse;
-        }
-
-        .message-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .message.user .message-avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .message.agent .message-avatar {
-            background: linear-gradient(135deg, #f7931e 0%, #ff6b35 100%);
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 1rem 1.25rem;
-            border-radius: 18px;
-            line-height: 1.6;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.agent .message-content {
-            background: linear-gradient(135deg, #fff 0%, #ffe4b5 100%);
-            color: #333;
-            border: 2px solid #ffd700;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message.system .message-content {
-            background: rgba(255, 215, 0, 0.2);
-            color: #666;
-            font-style: italic;
-            text-align: center;
-            max-width: 100%;
-            border: 1px dashed #ffd700;
-        }
-
-        /* Input Area */
-        .input-area {
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #ff6b35 0%, #ff1493 100%);
-            border-top: 3px solid #ffd700;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        #messageInput {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            border: 3px solid #ffd700;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-family: 'Poppins', sans-serif;
-            outline: none;
-            background: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        #messageInput:focus {
-            border-color: #ff6b35;
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-            transform: translateY(-2px);
-        }
-
-        #sendButton {
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #ff6b35;
-            border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        #sendButton:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
-            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-        }
-
-        #sendButton:active:not(:disabled) {
-            transform: translateY(-1px);
-        }
-
-        #sendButton:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Loading Animation */
+        /* Added typing indicator animation */
         .typing-indicator {
             display: none;
             align-items: center;
             gap: 0.5rem;
-            padding: 1rem;
         }
 
         .typing-indicator.active {
@@ -304,10 +60,10 @@
         }
 
         .typing-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #ff6b35;
+            background: #009639;
             animation: typing 1.4s infinite;
         }
 
@@ -320,101 +76,71 @@
         }
 
         @keyframes typing {
-
-            0%,
-            60%,
-            100% {
+            0%, 60%, 100% {
                 transform: translateY(0);
                 opacity: 0.7;
             }
-
             30% {
-                transform: translateY(-10px);
+                transform: translateY(-6px);
                 opacity: 1;
-            }
-        }
-
-        /* Status indicator */
-        .status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            font-size: 0.9rem;
-            font-weight: 600;
-            z-index: 1000;
-            border: 2px solid #ffd700;
-        }
-
-        .status.connected {
-            color: #22c55e;
-        }
-
-        .status.error {
-            color: #ef4444;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .chat-container {
-                margin: 1rem;
-                border-radius: 15px;
-            }
-
-            .message-content {
-                max-width: 85%;
-            }
-
-            #sendButton {
-                padding: 1rem 1.5rem;
             }
         }
     </style>
 </head>
-
-<body>
-    <div class="status" id="status">Connecting...</div>
-
-    <div class="header">
-        <h1>🪔 Raju's Royal Artifacts 🪔</h1>
-        <div class="subtitle">✨ Welcome to the Finest Treasures of India ✨</div>
-    </div>
-    <div class="decorative-border"></div>
-
-    <div class="chat-container">
-        <div class="messages" id="messages">
-            <div class="message system">
-                <div class="message-content">
-                    Welcome to Raju's Royal Artifacts! How may I assist you today?
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="/images/logo-i-serv.png" alt="I-SERV Logo" class="h-12">
+                <div>
+                    <h1 class="text-xl font-bold text-iserv-black">I-SERV BOT</h1>
+                    <p class="text-sm text-gray-500">Asistente Virtual Interno</p>
                 </div>
             </div>
-        </div>
-
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="message-avatar" style="background: linear-gradient(135deg, #f7931e 0%, #ff6b35 100%);">🛍️</div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-        </div>
-
-        <div class="input-area">
-            <div class="input-wrapper">
-                <input type="text" id="messageInput" placeholder="Ask about our royal artifacts..." autocomplete="off">
+            <!-- Updated status indicator to be dynamic -->
+            <div class="flex items-center gap-2">
+                <div id="statusIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                <span id="statusText" class="text-sm text-gray-600 font-medium">Conectando...</span>
             </div>
-            <button id="sendButton">Send</button>
         </div>
-    </div>
+    </header>
+
+    <!-- Chat Container -->
+    <main class="max-w-5xl mx-auto px-6 py-6">
+        <div class="bg-white rounded-2xl shadow-lg chat-container">
+            <!-- Messages Area -->
+            <div class="messages-container p-6 space-y-4" id="messagesContainer">
+                <!-- Removed example messages, they will be added dynamically -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="border-t border-gray-200 p-4">
+                <form id="chatForm" class="flex items-end gap-3">
+                    <textarea 
+                        id="messageInput"
+                        rows="1"
+                        placeholder="Escribe tu mensaje aquí..."
+                        class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-iserv-green focus:border-transparent"
+                        style="max-height: 120px;"
+                    ></textarea>
+                    <button 
+                        type="submit"
+                        id="sendButton"
+                        class="bg-iserv-green text-white px-6 py-3 rounded-xl font-semibold hover:bg-iserv-dark-green transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span>Enviar</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
 
     <script>
-        // Configuration
-        // Read API_BASE_URL from meta tag (injected by server) or use current origin as fallback
+        // Configuration - Read API_BASE_URL from meta tag or use current origin as fallback
         const apiBaseUrlMeta = document.querySelector('meta[name="api-base-url"]');
         const API_BASE_URL = apiBaseUrlMeta 
             ? apiBaseUrlMeta.getAttribute('content') 
@@ -427,23 +153,22 @@
         let isProcessing = false;
 
         // DOM Elements
-        const messagesContainer = document.getElementById('messages');
+        const form = document.getElementById('chatForm');
         const messageInput = document.getElementById('messageInput');
+        const messagesContainer = document.getElementById('messagesContainer');
         const sendButton = document.getElementById('sendButton');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const statusElement = document.getElementById('status');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
 
-        // Initialize session on page load
         async function initializeSession() {
             try {
-                updateStatus('Connecting...', false);
+                updateStatus('Conectando...', false);
 
-                console.log('Attempting to connect to:', `${API_BASE_URL}/apps/${APP_NAME}/users/${USER_ID}/sessions`);
-                console.log('Request payload:', {});
+                console.log('[v0] Attempting to connect to:', `${API_BASE_URL}/apps/${APP_NAME}/users/${USER_ID}/sessions`);
 
                 const response = await fetch(`${API_BASE_URL}/apps/${APP_NAME}/users/${USER_ID}/sessions`, {
                     method: 'POST',
-                    mode: 'cors', // Explicitly set CORS mode
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
@@ -451,81 +176,77 @@
                     body: JSON.stringify({})
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', [...response.headers.entries()]);
+                console.log('[v0] Response status:', response.status);
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Error response body:', errorText);
-                    throw new Error(`Failed to create session: ${response.status} ${response.statusText} - ${errorText}`);
+                    console.error('[v0] Error response:', errorText);
+                    throw new Error(`Failed to create session: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
                 sessionId = data.id;
 
-                updateStatus('Connected', true);
-                console.log('Session initialized successfully:', sessionId);
-                console.log('Full response data:', data);
+                updateStatus('En línea', true);
+                console.log('[v0] Session initialized successfully:', sessionId);
+
+                // Add welcome message
+                addMessage('¡Hola! Soy I-SERV BOT, tu asistente virtual para gestión interna. ¿En qué puedo ayudarte hoy?', 'bot');
+
             } catch (error) {
-                console.error('Error initializing session:', error);
-                console.error('Error type:', error.name);
-                console.error('Error message:', error.message);
+                console.error('[v0] Error initializing session:', error);
+                updateStatus('Error de conexión', false);
 
-                updateStatus('Connection Error', false);
-
-                let errorMsg = `Failed to connect to Raju's shop. `;
+                let errorMsg = 'No se pudo conectar al servidor. ';
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                    errorMsg += 'Network error - please check if the API is running and CORS is enabled. ';
+                    errorMsg += 'Por favor verifica que la API esté en ejecución. ';
                 }
                 errorMsg += `Error: ${error.message}`;
 
-                addMessage('system', errorMsg);
+                addMessage(errorMsg, 'system');
             }
         }
 
-        // Update status indicator
         function updateStatus(message, isConnected) {
-            statusElement.textContent = message;
-            statusElement.className = `status ${isConnected ? 'connected' : 'error'}`;
+            statusText.textContent = message;
+            statusIndicator.className = `w-2 h-2 rounded-full ${isConnected ? 'bg-iserv-green animate-pulse' : 'bg-red-500'}`;
         }
 
-        // Add message to chat
-        function addMessage(type, content) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-
-            if (type !== 'system') {
-                const avatar = document.createElement('div');
-                avatar.className = 'message-avatar';
-                avatar.textContent = type === 'user' ? '👤' : '🛍️';
-                messageDiv.appendChild(avatar);
-            }
-
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = content;
-            messageDiv.appendChild(contentDiv);
-
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        // Show/hide typing indicator
         function setTyping(isTyping) {
-            typingIndicator.classList.toggle('active', isTyping);
-            if (isTyping) {
-                typingIndicator.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            const existingIndicator = document.getElementById('typingIndicator');
+            
+            if (isTyping && !existingIndicator) {
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'typingIndicator';
+                typingDiv.className = 'flex items-start gap-3';
+                typingDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-iserv-green rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-5 py-3 inline-block">
+                            <div class="typing-indicator active">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                messagesContainer.appendChild(typingDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else if (!isTyping && existingIndicator) {
+                existingIndicator.remove();
             }
         }
 
-        // Send message to agent
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-
+        async function sendMessage(message) {
             if (!message || isProcessing || !sessionId) {
                 if (!sessionId) {
-                    console.warn('Cannot send message: No session ID available');
-                    addMessage('system', 'Please wait for connection to be established.');
+                    console.warn('[v0] Cannot send message: No session ID available');
+                    addMessage('Por favor espera a que se establezca la conexión.', 'system');
                 }
                 return;
             }
@@ -536,20 +257,13 @@
             messageInput.disabled = true;
 
             // Add user message to chat
-            addMessage('user', message);
-            messageInput.value = '';
+            addMessage(message, 'user');
 
             // Show typing indicator
             setTyping(true);
 
             try {
-                console.log('Sending message to:', `${API_BASE_URL}/run`);
-                console.log('Request payload:', {
-                    appName: APP_NAME,
-                    userId: USER_ID,
-                    session_id: sessionId,
-                    newMessage: { role: 'user', parts: [{ text: message }] }
-                });
+                console.log('[v0] Sending message to:', `${API_BASE_URL}/run`);
 
                 const response = await fetch(`${API_BASE_URL}/run`, {
                     method: 'POST',
@@ -569,29 +283,26 @@
                     })
                 });
 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', [...response.headers.entries()]);
+                console.log('[v0] Response status:', response.status);
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Error response body:', errorText);
-                    throw new Error(`Agent request failed: ${response.status} ${response.statusText} - ${errorText}`);
+                    console.error('[v0] Error response:', errorText);
+                    throw new Error(`Agent request failed: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                console.log('Response data:', data);
+                console.log('[v0] Response data received');
 
                 // Hide typing indicator
                 setTyping(false);
 
                 // Extract agent response
-                let agentResponse = 'I apologize, but I could not process your request.';
+                let agentResponse = 'Disculpa, no pude procesar tu solicitud.';
 
-                // The API returns an array of events directly
                 const events = Array.isArray(data) ? data : (data.events || []);
 
                 if (events.length > 0) {
-                    console.log('Processing events:', events.length);
                     // Find the last event with content from the agent
                     for (let i = events.length - 1; i >= 0; i--) {
                         const event = events[i];
@@ -599,11 +310,10 @@
                             for (const part of event.content.parts) {
                                 if (part.text) {
                                     agentResponse = part.text;
-                                    console.log('Found agent response:', agentResponse);
                                     break;
                                 }
                             }
-                            if (agentResponse !== 'I apologize, but I could not process your request.') {
+                            if (agentResponse !== 'Disculpa, no pude procesar tu solicitud.') {
                                 break;
                             }
                         }
@@ -611,21 +321,19 @@
                 }
 
                 // Add agent response to chat
-                addMessage('agent', agentResponse);
+                addMessage(agentResponse, 'bot');
 
             } catch (error) {
-                console.error('Error sending message:', error);
-                console.error('Error type:', error.name);
-                console.error('Error message:', error.message);
+                console.error('[v0] Error sending message:', error);
                 setTyping(false);
 
-                let errorMsg = 'Error communicating with Raju\'s shop: ';
+                let errorMsg = 'Error al comunicarse con el servidor. ';
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                    errorMsg += 'Network error - please check your connection. ';
+                    errorMsg += 'Verifica tu conexión a internet. ';
                 }
-                errorMsg += error.message;
+                errorMsg += `Detalles: ${error.message}`;
 
-                addMessage('system', errorMsg);
+                addMessage(errorMsg, 'system');
             } finally {
                 // Re-enable input
                 isProcessing = false;
@@ -635,19 +343,75 @@
             }
         }
 
-        // Event Listeners
-        sendButton.addEventListener('click', sendMessage);
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
 
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                sendMessage(message);
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
             }
         });
 
-        // Initialize on page load
-        window.addEventListener('load', initializeSession);
+        function addMessage(text, type) {
+            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'system') {
+                // System message (centered, different style)
+                messageDiv.className = 'flex justify-center';
+                messageDiv.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 max-w-xl">
+                        <p class="text-yellow-800 text-sm text-center">${text}</p>
+                    </div>
+                `;
+            } else if (type === 'user') {
+                messageDiv.className = 'flex items-start gap-3 justify-end';
+                messageDiv.innerHTML = `
+                    <div class="flex-1 flex flex-col items-end">
+                        <div class="bg-iserv-green rounded-2xl rounded-tr-sm px-5 py-3 inline-block max-w-xl">
+                            <p class="text-white leading-relaxed">${text}</p>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1 mr-1">${time}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-iserv-black rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                `;
+            } else {
+                // Bot message
+                messageDiv.className = 'flex items-start gap-3';
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-iserv-green rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-5 py-3 inline-block max-w-xl">
+                            <p class="text-gray-800 leading-relaxed">${text}</p>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1 ml-1">${time}</p>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        initializeSession();
     </script>
 </body>
-
 </html>
