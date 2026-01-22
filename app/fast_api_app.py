@@ -14,11 +14,14 @@
 
 import os
 import warnings
-from fastapi import FastAPI
+from typing import Optional
+from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from google.adk.cli.fast_api import get_fast_api_app
 from app.app_utils.typing import Feedback
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # Suppress Telemetry API warnings in local development
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Telemetry API.*")
@@ -109,6 +112,110 @@ def collect_feedback(feedback: Feedback) -> dict[str, str]:
         Success message
     """
     return {"status": "success"}
+
+
+# ============================================
+# Database Helper Functions
+# ============================================
+
+def get_db_connection():
+    """Create a database connection using environment variables."""
+    return psycopg2.connect(
+        host=os.getenv("PG_HOST", "localhost"),
+        port=os.getenv("PG_PORT", "5432"),
+        database=os.getenv("PG_DATABASE", "postgres"),
+        user=os.getenv("PG_USER", "postgres"),
+        password=os.getenv("PG_PASSWORD", ""),
+        cursor_factory=RealDictCursor
+    )
+
+
+# ============================================
+# API Endpoints for Dropdowns
+# ============================================
+
+@app.get("/api/productos")
+async def get_productos(
+    search: Optional[str] = Query(None, description="Search term for product name"),
+    limit: int = Query(50, description="Maximum number of results")
+):
+    """Get list of products from catalogo_maestro.descripcion."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if search:
+            # Search with ILIKE for case-insensitive partial matching
+            query = """
+                SELECT DISTINCT descripcion 
+                FROM catalogo_maestro 
+                WHERE descripcion ILIKE %s 
+                ORDER BY descripcion 
+                LIMIT %s
+            """
+            cursor.execute(query, (f"%{search}%", limit))
+        else:
+            # Get all products (limited)
+            query = """
+                SELECT DISTINCT descripcion 
+                FROM catalogo_maestro 
+                ORDER BY descripcion 
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+        
+        results = cursor.fetchall()
+        productos = [row["descripcion"] for row in results if row["descripcion"]]
+        
+        cursor.close()
+        conn.close()
+        
+        return {"productos": productos, "total": len(productos)}
+    
+    except Exception as e:
+        return {"error": str(e), "productos": []}
+
+
+@app.get("/api/proveedores")
+async def get_proveedores(
+    search: Optional[str] = Query(None, description="Search term for provider name"),
+    limit: int = Query(50, description="Maximum number of results")
+):
+    """Get list of providers (razon_social) from proveedor table."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if search:
+            # Search with ILIKE for case-insensitive partial matching
+            query = """
+                SELECT DISTINCT razon_social 
+                FROM proveedor 
+                WHERE razon_social ILIKE %s 
+                ORDER BY razon_social 
+                LIMIT %s
+            """
+            cursor.execute(query, (f"%{search}%", limit))
+        else:
+            # Get all providers (limited)
+            query = """
+                SELECT DISTINCT razon_social 
+                FROM proveedor 
+                ORDER BY razon_social 
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+        
+        results = cursor.fetchall()
+        proveedores = [row["razon_social"] for row in results if row["razon_social"]]
+        
+        cursor.close()
+        conn.close()
+        
+        return {"proveedores": proveedores, "total": len(proveedores)}
+    
+    except Exception as e:
+        return {"error": str(e), "proveedores": []}
 
 
 # Main execution

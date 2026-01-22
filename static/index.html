@@ -343,6 +343,422 @@
             margin: 8px 0;
             padding-left: 20px;
         }
+
+        /* Floating Suggested Prompts Panel */
+        .suggested-prompts-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            max-height: 80vh;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .suggested-prompts-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #009639 0%, #00843D 100%);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 150, 57, 0.4);
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .suggested-prompts-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 150, 57, 0.5);
+        }
+
+        .suggested-prompts-toggle svg {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .suggested-prompts-toggle.active svg {
+            transform: rotate(45deg);
+        }
+
+        .suggested-prompts-container {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            max-width: 320px;
+            max-height: calc(80vh - 70px);
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+        }
+
+        .suggested-prompts-container.show {
+            display: flex;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .suggested-prompts-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 4px;
+        }
+
+        .suggested-prompts-header svg {
+            width: 18px;
+            height: 18px;
+            color: #009639;
+        }
+
+        .suggested-prompts-header span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .prompt-btn {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+        }
+
+        .prompt-btn:hover {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-color: #009639;
+            transform: translateX(-4px);
+            box-shadow: 0 2px 8px rgba(0, 150, 57, 0.15);
+        }
+
+        .prompt-btn:active {
+            transform: translateX(-2px) scale(0.98);
+        }
+
+        .prompt-btn-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #009639 0%, #00843D 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .prompt-btn-icon svg {
+            width: 14px;
+            height: 14px;
+            color: white;
+        }
+
+        .prompt-btn-text {
+            font-size: 0.8rem;
+            color: #374151;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .prompt-btn-text strong {
+            color: #009639;
+            font-weight: 600;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .suggested-prompts-panel {
+                right: 10px;
+                bottom: 100px;
+                top: auto;
+                transform: none;
+            }
+
+            .suggested-prompts-container {
+                max-width: 280px;
+            }
+
+            .suggested-prompts-toggle {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        /* Scrollbar for prompts container */
+        .suggested-prompts-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .suggested-prompts-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .suggested-prompts-container::-webkit-scrollbar-thumb {
+            background: #009639;
+            border-radius: 2px;
+        }
+
+        /* Dropdown Selector Styles */
+        .dropdown-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .dropdown-section:last-of-type {
+            margin-bottom: 8px;
+        }
+
+        .dropdown-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .dropdown-label svg {
+            width: 14px;
+            height: 14px;
+            color: #009639;
+        }
+
+        .search-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #374151;
+            background: white;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #009639;
+            box-shadow: 0 0 0 3px rgba(0, 150, 57, 0.15);
+        }
+
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+        }
+
+        .dropdown-list.show {
+            display: block;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #009639;
+        }
+
+        .dropdown-item.selected {
+            background: #009639;
+            color: white;
+        }
+
+        .dropdown-item mark {
+            background: #fef08a;
+            color: inherit;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .dropdown-loading {
+            padding: 12px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+
+        .dropdown-loading::after {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #009639;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .dropdown-empty {
+            padding: 12px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        .dropdown-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .dropdown-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .dropdown-list::-webkit-scrollbar-thumb {
+            background: #009639;
+            border-radius: 2px;
+        }
+
+        /* Query Templates */
+        .query-templates {
+            margin-top: 8px;
+        }
+
+        .query-template-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            color: #6b7280;
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .query-template-btn:hover {
+            background: #ecfdf5;
+            border-color: #009639;
+            color: #009639;
+        }
+
+        .query-template-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .query-template-btn strong {
+            color: #009639;
+        }
+
+        /* Section divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+            color: #9ca3af;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -1688,6 +2104,11 @@
         function renderMarkdown(text) {
             if (!text) return '';
             
+            // Convert literal \n sequences to actual newlines (LLM sometimes outputs these as text)
+            text = text.replace(/\\n/g, '\n');
+            // Clean up excessive newlines
+            text = text.replace(/\n{3,}/g, '\n\n');
+            
             // Split into lines to process lists properly
             const lines = text.split('\n');
             const processedLines = [];
@@ -1758,6 +2179,453 @@
         }
 
         initializeSession();
+
+        // ============================================
+        // SUGGESTED PROMPTS PANEL
+        // ============================================
+
+        // Quick prompts (shorter list for the bottom)
+        const quickPrompts = [
+            {
+                text: "Total de compras por proveedor diciembre 2025",
+                icon: "cart",
+                highlight: "compras por proveedor"
+            },
+            {
+                text: "centro de costos ultima semana",
+                icon: "chart",
+                highlight: "centro de costos"
+            },
+            {
+                text: "facturas de los ultimos 3 meses por proyecto valor",
+                icon: "invoice",
+                highlight: "facturas"
+            },
+            {
+                text: "presupuesto en GAB DEL PROYECTO PIAMONTE",
+                icon: "money",
+                highlight: "presupuesto"
+            }
+        ];
+
+        const promptIcons = {
+            cable: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+            building: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
+            cart: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>',
+            chart: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+            invoice: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+            money: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+            trending: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>'
+        };
+
+        // Selected items state
+        let selectedProducto = null;
+        let selectedProveedor = null;
+        let searchTimeout = null;
+
+        function createPromptButtons() {
+            const container = document.getElementById('quickPromptsContainer');
+            if (!container) return;
+
+            quickPrompts.forEach((prompt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'prompt-btn';
+                btn.setAttribute('data-prompt', prompt.text);
+                btn.setAttribute('title', prompt.text);
+                
+                // Highlight the key term in the text
+                let displayText = prompt.text;
+                if (prompt.highlight) {
+                    displayText = prompt.text.replace(
+                        new RegExp(`(${prompt.highlight})`, 'i'),
+                        '<strong>$1</strong>'
+                    );
+                }
+
+                btn.innerHTML = `
+                    <div class="prompt-btn-icon">
+                        ${promptIcons[prompt.icon] || promptIcons.chart}
+                    </div>
+                    <span class="prompt-btn-text">${displayText}</span>
+                `;
+
+                btn.addEventListener('click', () => {
+                    sendSuggestedPrompt(prompt.text);
+                });
+
+                container.appendChild(btn);
+            });
+
+            // Initialize dropdown listeners
+            initializeDropdowns();
+        }
+
+        function initializeDropdowns() {
+            // Producto search
+            const productoInput = document.getElementById('productoSearch');
+            const productoList = document.getElementById('productoList');
+            
+            if (productoInput && productoList) {
+                productoInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchProductos(e.target.value);
+                    }, 300);
+                });
+
+                productoInput.addEventListener('focus', () => {
+                    if (productoInput.value.length >= 2) {
+                        searchProductos(productoInput.value);
+                    }
+                });
+            }
+
+            // Proveedor search
+            const proveedorInput = document.getElementById('proveedorSearch');
+            const proveedorList = document.getElementById('proveedorList');
+            
+            if (proveedorInput && proveedorList) {
+                proveedorInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchProveedores(e.target.value);
+                    }, 300);
+                });
+
+                proveedorInput.addEventListener('focus', () => {
+                    if (proveedorInput.value.length >= 2) {
+                        searchProveedores(proveedorInput.value);
+                    }
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-dropdown')) {
+                    document.querySelectorAll('.dropdown-list').forEach(list => {
+                        list.classList.remove('show');
+                    });
+                }
+            });
+
+            // Template buttons
+            document.querySelectorAll('.query-template-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const template = btn.dataset.template;
+                    executeTemplate(template);
+                });
+            });
+        }
+
+        async function searchProductos(query) {
+            const list = document.getElementById('productoList');
+            if (!list) return;
+
+            if (query.length < 2) {
+                list.classList.remove('show');
+                return;
+            }
+
+            list.innerHTML = '<div class="dropdown-loading">Buscando</div>';
+            list.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/productos?search=${encodeURIComponent(query)}&limit=20`);
+                const data = await response.json();
+
+                if (data.error) {
+                    list.innerHTML = '<div class="dropdown-empty">Error al buscar</div>';
+                    return;
+                }
+
+                if (data.productos.length === 0) {
+                    list.innerHTML = '<div class="dropdown-empty">No se encontraron productos</div>';
+                    return;
+                }
+
+                list.innerHTML = data.productos.map(producto => {
+                    const highlighted = highlightMatch(producto, query);
+                    return `<div class="dropdown-item" data-value="${escapeHtml(producto)}">${highlighted}</div>`;
+                }).join('');
+
+                // Add click handlers
+                list.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selectProducto(item.dataset.value);
+                    });
+                });
+            } catch (error) {
+                console.error('Error searching productos:', error);
+                list.innerHTML = '<div class="dropdown-empty">Error de conexión</div>';
+            }
+        }
+
+        async function searchProveedores(query) {
+            const list = document.getElementById('proveedorList');
+            if (!list) return;
+
+            if (query.length < 2) {
+                list.classList.remove('show');
+                return;
+            }
+
+            list.innerHTML = '<div class="dropdown-loading">Buscando</div>';
+            list.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/proveedores?search=${encodeURIComponent(query)}&limit=20`);
+                const data = await response.json();
+
+                if (data.error) {
+                    list.innerHTML = '<div class="dropdown-empty">Error al buscar</div>';
+                    return;
+                }
+
+                if (data.proveedores.length === 0) {
+                    list.innerHTML = '<div class="dropdown-empty">No se encontraron proveedores</div>';
+                    return;
+                }
+
+                list.innerHTML = data.proveedores.map(proveedor => {
+                    const highlighted = highlightMatch(proveedor, query);
+                    return `<div class="dropdown-item" data-value="${escapeHtml(proveedor)}">${highlighted}</div>`;
+                }).join('');
+
+                // Add click handlers
+                list.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selectProveedor(item.dataset.value);
+                    });
+                });
+            } catch (error) {
+                console.error('Error searching proveedores:', error);
+                list.innerHTML = '<div class="dropdown-empty">Error de conexión</div>';
+            }
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return escapeHtml(text);
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+        }
+
+        function selectProducto(producto) {
+            selectedProducto = producto;
+            
+            // Update input
+            const input = document.getElementById('productoSearch');
+            if (input) {
+                input.value = producto;
+            }
+
+            // Hide dropdown
+            const list = document.getElementById('productoList');
+            if (list) {
+                list.classList.remove('show');
+            }
+
+            // Enable and update template buttons
+            const templates = document.getElementById('productoTemplates');
+            if (templates) {
+                templates.querySelectorAll('.query-template-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+                
+                // Update display names (truncate if too long)
+                const displayName = producto.length > 25 ? producto.substring(0, 25) + '...' : producto;
+                document.getElementById('selectedProductoName').textContent = displayName;
+                document.getElementById('selectedProductoName2').textContent = displayName;
+            }
+        }
+
+        function selectProveedor(proveedor) {
+            selectedProveedor = proveedor;
+            
+            // Update input
+            const input = document.getElementById('proveedorSearch');
+            if (input) {
+                input.value = proveedor;
+            }
+
+            // Hide dropdown
+            const list = document.getElementById('proveedorList');
+            if (list) {
+                list.classList.remove('show');
+            }
+
+            // Enable and update template buttons
+            const templates = document.getElementById('proveedorTemplates');
+            if (templates) {
+                templates.querySelectorAll('.query-template-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+                
+                // Update display names (truncate if too long)
+                const displayName = proveedor.length > 20 ? proveedor.substring(0, 20) + '...' : proveedor;
+                document.getElementById('selectedProveedorName').textContent = displayName;
+                document.getElementById('selectedProveedorName2').textContent = displayName;
+            }
+        }
+
+        function executeTemplate(template) {
+            let query = '';
+            
+            switch (template) {
+                case 'producto-precios':
+                    if (selectedProducto) {
+                        query = `${selectedProducto} dame los precios de las facturas y su estadistica descriptivo`;
+                    }
+                    break;
+                case 'producto-compras':
+                    if (selectedProducto) {
+                        query = `COMPRAS MES A MES DE ${selectedProducto}`;
+                    }
+                    break;
+                case 'proveedor-facturas':
+                    if (selectedProveedor) {
+                        query = `${selectedProveedor} facturas por mes`;
+                    }
+                    break;
+                case 'proveedor-compras':
+                    if (selectedProveedor) {
+                        query = `Total de compras de ${selectedProveedor} ultimo año`;
+                    }
+                    break;
+            }
+
+            if (query) {
+                sendSuggestedPrompt(query);
+            }
+        }
+
+        function sendSuggestedPrompt(text) {
+            // Close the panel
+            togglePromptsPanel(false);
+            
+            // Set the text in the input and send
+            messageInput.value = text;
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            
+            // Send the message
+            sendMessage(text);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+        }
+
+        function togglePromptsPanel(forceState = null) {
+            const toggle = document.getElementById('promptsToggle');
+            const container = document.getElementById('promptsContainer');
+            
+            if (!toggle || !container) return;
+
+            const shouldShow = forceState !== null ? forceState : !container.classList.contains('show');
+            
+            if (shouldShow) {
+                container.classList.add('show');
+                toggle.classList.add('active');
+            } else {
+                container.classList.remove('show');
+                toggle.classList.remove('active');
+            }
+        }
+
+        // Initialize prompts panel on page load
+        document.addEventListener('DOMContentLoaded', createPromptButtons);
+        
+        // If DOM is already loaded, create buttons now
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(createPromptButtons, 100);
+        }
     </script>
+
+    <!-- Floating Suggested Prompts Panel -->
+    <div class="suggested-prompts-panel">
+        <div id="promptsContainer" class="suggested-prompts-container">
+            <div class="suggested-prompts-header">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <span>Consultas Sugeridas</span>
+            </div>
+
+            <!-- Productos Dropdown -->
+            <div class="dropdown-section">
+                <div class="dropdown-label">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <span>Buscar Producto</span>
+                </div>
+                <div class="search-dropdown">
+                    <input 
+                        type="text" 
+                        id="productoSearch" 
+                        class="search-input" 
+                        placeholder="Ej: ALAMBRE, CABLE, TUBO..."
+                        autocomplete="off"
+                    >
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <div id="productoList" class="dropdown-list"></div>
+                </div>
+                <div class="query-templates" id="productoTemplates">
+                    <button class="query-template-btn" data-template="producto-precios" disabled>
+                        📊 Precios y estadística de <strong id="selectedProductoName">selecciona producto</strong>
+                    </button>
+                    <button class="query-template-btn" data-template="producto-compras" disabled>
+                        🛒 Compras mensuales de <strong id="selectedProductoName2">selecciona producto</strong>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Proveedores Dropdown -->
+            <div class="dropdown-section">
+                <div class="dropdown-label">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span>Buscar Proveedor</span>
+                </div>
+                <div class="search-dropdown">
+                    <input 
+                        type="text" 
+                        id="proveedorSearch" 
+                        class="search-input" 
+                        placeholder="Ej: RYMEL, CABLECOL..."
+                        autocomplete="off"
+                    >
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <div id="proveedorList" class="dropdown-list"></div>
+                </div>
+                <div class="query-templates" id="proveedorTemplates">
+                    <button class="query-template-btn" data-template="proveedor-facturas" disabled>
+                        📄 Facturas por mes de <strong id="selectedProveedorName">selecciona proveedor</strong>
+                    </button>
+                    <button class="query-template-btn" data-template="proveedor-compras" disabled>
+                        💰 Total compras de <strong id="selectedProveedorName2">selecciona proveedor</strong>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-divider">Consultas rápidas</div>
+
+            <!-- Prompt buttons will be inserted here by JavaScript -->
+            <div id="quickPromptsContainer"></div>
+        </div>
+        <button 
+            id="promptsToggle" 
+            class="suggested-prompts-toggle" 
+            onclick="togglePromptsPanel()"
+            title="Ver consultas sugeridas"
+        >
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+        </button>
+    </div>
 </body>
 </html>

@@ -72,7 +72,24 @@ def get_sql_agent():
         
         system_prompt = """Eres un ejecutor de consultas SQL para PostgreSQL.
         Solo ejecuta consultas SELECT. NUNCA ejecutes INSERT, UPDATE, DELETE, DROP, ALTER o TRUNCATE.
-        Respeta los nombres exactos de tablas y columnas."""
+        Respeta los nombres exactos de tablas y columnas.
+        
+        FORMATO DE RESPUESTA CRÍTICO:
+        - Usa saltos de línea REALES (presiona Enter), NO escribas \\n como texto
+        - Formatea los resultados como lista markdown con viñetas o números
+        - Cada item en una línea separada
+        - Usa **negritas** para nombres de categorías
+        
+        Ejemplo de formato CORRECTO:
+        
+        Aquí están los resultados:
+        
+        * **PROVEEDOR A**: $1,234,567
+        * **PROVEEDOR B**: $987,654
+        * **PROVEEDOR C**: $456,789
+        
+        Ejemplo de formato INCORRECTO (NO hacer esto):
+        PROVEEDOR A: 1234567\\n PROVEEDOR B: 987654\\n"""
         
         _sql_agent = create_sql_agent(
             llm=llm,
@@ -96,9 +113,22 @@ def get_viz_llm():
             model="gemini-2.5-flash",
             project=project_id,
             location=os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"),
-            temperature=0.1,
+            temperature=0.2,
         )
     return _viz_llm
+
+
+def quick_detect_visualization(raw_data: str) -> dict | None:
+    """
+    Quick detection - only skip visualization for truly non-visualizable cases.
+    Returns None to always try LLM analysis when there's any data.
+    """
+    # Only skip if response is extremely short (likely an error or single number)
+    if len(raw_data.strip()) < 20:
+        return {"visualizable": False, "type": "none", "reason": "Too short"}
+    
+    # Always try to visualize if there's data
+    return None  # Let LLM decide
 
 
 def analyze_visualization(raw_data: str, question: str) -> dict:
@@ -114,85 +144,41 @@ def analyze_visualization(raw_data: str, question: str) -> dict:
     Returns:
         A dictionary with visualization configuration
     """
-    viz_prompt = f"""Analiza los siguientes datos de una consulta SQL y determina la mejor visualización.
+    # Try quick detection first (no LLM call)
+    quick_result = quick_detect_visualization(raw_data)
+    if quick_result is not None:
+        print(f"[ANALYZE_VIZ] Quick detection: {quick_result.get('reason', 'skipped')}")
+        return quick_result
+    
+    # Truncate raw_data if too long to speed up processing
+    max_data_len = 3000
+    truncated_data = raw_data[:max_data_len] + "..." if len(raw_data) > max_data_len else raw_data
+    
+    viz_prompt = f"""Genera configuración de visualización para estos datos SQL.
 
-PREGUNTA DEL USUARIO: {question}
+PREGUNTA: {question}
+DATOS:
+{truncated_data}
 
-DATOS OBTENIDOS:
-{raw_data}
+REGLA PRINCIPAL: SIEMPRE genera visualización si hay al menos 1 registro con datos numéricos. Usa "bar" por defecto.
 
-INSTRUCCIONES:
-1. Analiza el tipo de datos (categorías, series temporales, proporciones, etc.)
-2. Determina si los datos son aptos para visualización (mínimo 2 registros con datos numéricos)
-3. Selecciona el tipo de gráfico más apropiado
+REGLAS:
+- Si >10 registros: incluir solo Top 10 ordenados por valor DESC, indicar "Top 10" en título
+- Tipos: bar (DEFAULT para categorías), line (series temporales), pie (≤8 proporciones), groupedBar (2 dimensiones)
+- Si hay 2 dimensiones categóricas: usar groupedBar con groupBy y legend
+- Incluso con 1 solo registro: visualizar como bar
 
-REGLA CRÍTICA - TOP 10:
-- Si los datos tienen MÁS DE 10 registros/filas, DEBES incluir SOLO los primeros 10 (Top 10) en el campo "data.rows"
-- Cuando limites a Top 10, el título DEBE indicarlo claramente, ejemplo: "Top 10 Proveedores por Compras" en lugar de solo "Proveedores por Compras"
-- Ordena los datos de mayor a menor valor numérico antes de tomar el Top 10
+⚠️ CRÍTICO - VALORES NUMÉRICOS:
+- NUNCA dividir ni transformar los valores numéricos
+- Si el dato es $1098.00, el valor en rows debe ser 1098 (número entero), NO 1.098
+- Si el dato es $53,402,980, el valor debe ser 53402980, NO 53.4
+- Mantener los valores EXACTAMENTE como aparecen, solo quitar símbolos $ y comas
+- Ejemplo: "$1,234.56" → 1234.56 (NO 1.234)
 
-REGLAS DE SELECCIÓN DE GRÁFICO:
-- "bar": Comparaciones entre categorías (ej: ventas por proveedor, cantidad por producto)
-- "line": Series temporales o tendencias (ej: ventas por mes, evolución de precios)
-- "pie": Proporciones o porcentajes del total (máximo 8 categorías)
-- "area": Tendencias acumuladas o comparativas en el tiempo
-- "table": Datos detallados con muchas columnas o registros sin patrón claro
-- "none": Si los datos no son aptos para visualización (un solo valor, texto largo, etc.)
+Responde SOLO JSON válido (sin markdown ni explicaciones):
+{{"visualizable":true,"type":"bar","title":"...","xAxis":"col","yAxis":"col","xAxisLabel":"...","yAxisLabel":"...","series":[{{"name":"...","field":"col"}}],"groupBy":"col_opcional","legend":{{"show":false}},"data":{{"columns":["c1","c2"],"rows":[[v1,v2]]}},"isTop10":false,"totalRecords":N,"summary":"Resumen breve"}}
 
-AGRUPACIÓN POR SUBGRUPOS Y LEYENDAS:
-- Si los datos tienen MÚLTIPLES dimensiones categóricas (ej: Proyecto y Mes, Categoría y Región):
-  * Identifica la dimensión principal para el eje X (ej: "Proyecto" o "Mes")
-  * Identifica la dimensión secundaria para las leyendas (ej: "Mes" o "Proyecto")
-  * Usa "groupedBar" o "stackedBar" para barras agrupadas/apiladas
-  * Usa "multiLine" para líneas múltiples cuando hay series temporales con categorías
-  * Incluye "legend": {{"show": true, "data": ["serie1", "serie2"]}} para mostrar leyendas
-  * Incluye "groupBy": "nombre_columna_para_agrupar" para indicar la columna de agrupación
-
-EJEMPLOS DE AGRUPACIÓN:
-- Si tienes columnas ["Proyecto", "Mes", "Total"]:
-  * xAxis: "Proyecto" (o "Mes" si quieres ver evolución temporal)
-  * groupBy: "Mes" (o "Proyecto" si xAxis es "Mes")
-  * type: "groupedBar" para comparar proyectos por mes
-  * legend: {{"show": true, "data": ["Oct 2025", "Nov 2025", "Dec 2025"]}}
-  
-- Si tienes columnas ["Categoría", "Región", "Ventas"]:
-  * xAxis: "Categoría"
-  * groupBy: "Región"
-  * type: "groupedBar"
-  * legend: {{"show": true, "data": ["Norte", "Sur", "Este", "Oeste"]}}
-
-Responde ÚNICAMENTE con un JSON válido (sin markdown, sin explicaciones) con esta estructura:
-{{
-    "visualizable": true/false,
-    "type": "bar|line|pie|area|table|none|groupedBar|stackedBar|multiLine",
-    "title": "Título descriptivo (incluir 'Top 10' si aplica)",
-    "xAxis": "nombre_columna_eje_x",
-    "yAxis": "nombre_columna_eje_y", 
-    "xAxisLabel": "Etiqueta legible para eje X",
-    "yAxisLabel": "Etiqueta legible para eje Y",
-    "series": [{{"name": "Nombre de la serie", "field": "columna_valor"}}],
-    "groupBy": "nombre_columna_para_agrupar_leyendas (opcional, solo si hay múltiples dimensiones)",
-    "legend": {{"show": true/false, "data": ["serie1", "serie2"]}},
-    "data": {{
-        "columns": ["col1", "col2", "col3"],
-        "rows": [["valor1", "valor2", valor3], ["valor4", "valor5", valor6]]
-    }},
-    "isTop10": true/false,
-    "totalRecords": número_total_de_registros_originales,
-    "summary": "Resumen breve de los datos (ej: 'Total de 39 proveedores. El proveedor con más compras es X con $Y')"
-}}
-
-NOTA IMPORTANTE SOBRE FULLDATA:
-- NO incluyas el campo "fullData" en tu respuesta para evitar JSONs muy grandes
-- Solo incluye "data" con el Top 10 para visualización
-- El summary debe mencionar el total de registros
-
-Si los datos NO son visualizables, responde:
-{{
-    "visualizable": false,
-    "type": "none",
-    "reason": "Razón por la que no se puede visualizar"
-}}
+SOLO usa visualizable:false si no hay NINGÚN dato numérico.
 """
     
     try:
@@ -257,14 +243,20 @@ def sanitize_text_for_json(text: str) -> str:
     """Sanitize text to be safely included in JSON."""
     if not text:
         return ""
+    import re
     # Replace problematic characters
     text = text.replace('\r\n', '\n').replace('\r', '\n')
     # Remove any null bytes
     text = text.replace('\x00', '')
-    # Remove backslash followed by invalid escape chars (common LLM issue)
-    text = text.replace('\\n', '\n').replace('\\t', '\t')
+    # Convert literal \n sequences to actual newlines (handles LLM outputting \n as text)
+    # This handles: \\n, \n as literal text, and variations
+    text = text.replace('\\n', '\n')
+    text = text.replace('\\t', '\t')
+    # Also handle cases where LLM outputs literal backslash-n in different encodings
+    text = re.sub(r'(?<!\\)\\n', '\n', text)
+    # Clean up any double newlines
+    text = re.sub(r'\n{3,}', '\n\n', text)
     # Remove other control characters
-    import re
     text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
     return text
 
@@ -564,6 +556,46 @@ root_agent = Agent(
 
     - **Ejemplo (Movimiento)**: `flujo_productos.sent_date::date = CURRENT_DATE`
 
+    ## CONSULTAS RÁPIDAS DE PRECIOS Y ESTADÍSTICAS (OPTIMIZADO):
+
+    Cuando el usuario pida **precios de un producto con estadísticas descriptivas**, usar UNA SOLA consulta eficiente:
+
+    ```sql
+    SELECT 
+        fd.producto_estandarizado AS producto,
+        COUNT(*) AS num_compras,
+        ROUND(AVG(fd.precio_unitario), 0) AS precio_promedio,
+        MIN(fd.precio_unitario) AS precio_minimo,
+        MAX(fd.precio_unitario) AS precio_maximo,
+        ROUND(STDDEV(fd.precio_unitario), 2) AS desviacion_std,
+        MIN(f.fecha_emision)::date AS primera_compra,
+        MAX(f.fecha_emision)::date AS ultima_compra
+    FROM factura_detalle fd
+    JOIN factura f ON f.factura_id = fd.factura_id
+    WHERE fd.producto_estandarizado ILIKE '%NOMBRE_PRODUCTO%'
+    GROUP BY fd.producto_estandarizado;
+    ```
+
+    **Si necesita histórico por mes** (para gráficos de tendencia):
+    ```sql
+    SELECT 
+        TO_CHAR(f.fecha_emision, 'YYYY-MM') AS mes,
+        ROUND(AVG(fd.precio_unitario), 0) AS precio_promedio,
+        MIN(fd.precio_unitario) AS precio_min,
+        MAX(fd.precio_unitario) AS precio_max
+    FROM factura_detalle fd
+    JOIN factura f ON f.factura_id = fd.factura_id
+    WHERE fd.producto_estandarizado ILIKE '%NOMBRE_PRODUCTO%'
+    GROUP BY TO_CHAR(f.fecha_emision, 'YYYY-MM')
+    ORDER BY mes;
+    ```
+
+    **IMPORTANTE**: 
+    - Usar `ILIKE` para búsquedas flexibles (insensible a mayúsculas)
+    - NO hacer múltiples consultas separadas - consolidar en UNA consulta
+    - Preferir `producto_estandarizado` sobre `descripcion` para búsquedas
+    - Los precios unitarios están en `factura_detalle.precio_unitario`
+
     ## LÓGICA DE INVENTARIO Y FLUJO (flujo_productos / factura):
 
     - **INGRESO (Adquisición/Compra)**: Se obtiene **SOLAMENTE** de `factura_detalle` y `factura`. Usa `SUM(factura_detalle.cantidad)`.
@@ -586,7 +618,126 @@ root_agent = Agent(
 
     - **PROHIBIDO**: NUNCA intentes correlacionar `factura_detalle` y `flujo_productos` en el mismo `JOIN` principal. Deben ser calculados como totales separados.
 
+    ## LÓGICA DE CENTRO DE COSTOS (centro_costos & ordenes_compra_cc & factura) - CRÍTICO:
+
+    - **FUENTE PRINCIPAL**: Usar `ordenes_compra_cc` como punto de partida para consultas de centro de costos por proyecto.
+    - **PROHIBIDO**: NO usar `financiero_excel_diario` para consultas de centro de costos - tiene datos inconsistentes.
+    - **PROHIBIDO**: NO usar `presupuesto.codigo = centro_costos.cc` - esta relación NO existe.
+
+    ### ESTRUCTURA DE ordenes_compra_cc (IMPORTANTE):
+    La tabla `ordenes_compra_cc` tiene las siguientes columnas:
+    - `numero_oc`: Número de orden de compra (relaciona con `factura.orden_compra`)
+    - `cc`: Código del centro de costos (relaciona con `centro_costos.cc`)
+    - `proyecto`: Nombre del proyecto (USAR PARA FILTRAR POR PROYECTO)
+    - `descripcion`, `fecha_creacion`, `estado`, `monto`
+
+    - **Cadena de Relación CORRECTA** (USAR SIEMPRE):
+      1. `ordenes_compra_cc.proyecto` → Filtrar por proyecto
+      2. `ordenes_compra_cc.numero_oc` → `factura.orden_compra` (para obtener valores facturados)
+      3. `ordenes_compra_cc.cc` → `centro_costos.cc` (para nombre del CC)
+
+    ### CONSULTA PRINCIPAL - Centro de Costos con Valor Facturado por Proyecto:
+    ```sql
+    SELECT 
+        oc.cc AS codigo_cc,
+        cc.nombre AS centro_costo,
+        oc.proyecto,
+        COUNT(DISTINCT oc.numero_oc) AS total_ordenes_compra,
+        COUNT(DISTINCT f.factura_id) AS total_facturas,
+        COALESCE(SUM(f.total_factura), 0) AS valor_facturado
+    FROM ordenes_compra_cc oc
+    LEFT JOIN centro_costos cc ON cc.cc = oc.cc
+    LEFT JOIN factura f ON f.orden_compra = oc.numero_oc
+    WHERE oc.proyecto ILIKE '%nombre_proyecto%'
+    GROUP BY oc.cc, cc.nombre, oc.proyecto
+    ORDER BY valor_facturado DESC;
+    ```
+
+    ### CONSULTA DETALLADA - Facturas por Centro de Costo y Proyecto:
+    ```sql
+    SELECT 
+        oc.cc AS codigo_cc,
+        cc.nombre AS centro_costo,
+        oc.numero_oc,
+        f.numero AS numero_factura,
+        f.fecha_emision,
+        f.total_factura AS valor_factura,
+        p.razon_social AS proveedor
+    FROM ordenes_compra_cc oc
+    LEFT JOIN centro_costos cc ON cc.cc = oc.cc
+    LEFT JOIN factura f ON f.orden_compra = oc.numero_oc
+    LEFT JOIN proveedor p ON p.proveedor_id = f.proveedor_id
+    WHERE oc.proyecto ILIKE '%nombre_proyecto%'
+      AND f.factura_id IS NOT NULL
+    ORDER BY cc.nombre, f.fecha_emision DESC;
+    ```
+
+    ### CONSULTA - Resumen de Centro de Costos con OC sin facturar:
+    ```sql
+    SELECT 
+        oc.cc AS codigo_cc,
+        cc.nombre AS centro_costo,
+        oc.proyecto,
+        COUNT(DISTINCT oc.numero_oc) AS total_oc,
+        COUNT(DISTINCT CASE WHEN f.factura_id IS NOT NULL THEN oc.numero_oc END) AS oc_facturadas,
+        COUNT(DISTINCT CASE WHEN f.factura_id IS NULL THEN oc.numero_oc END) AS oc_sin_facturar,
+        COALESCE(SUM(f.total_factura), 0) AS valor_facturado
+    FROM ordenes_compra_cc oc
+    LEFT JOIN centro_costos cc ON cc.cc = oc.cc
+    LEFT JOIN factura f ON f.orden_compra = oc.numero_oc
+    WHERE oc.proyecto ILIKE '%nombre_proyecto%'
+    GROUP BY oc.cc, cc.nombre, oc.proyecto
+    ORDER BY valor_facturado DESC;
+    ```
+
+    ### CONSULTA - Filtrar por período de facturación:
+    ```sql
+    SELECT 
+        oc.cc AS codigo_cc,
+        cc.nombre AS centro_costo,
+        COUNT(DISTINCT f.factura_id) AS total_facturas,
+        SUM(f.total_factura) AS valor_facturado
+    FROM ordenes_compra_cc oc
+    LEFT JOIN centro_costos cc ON cc.cc = oc.cc
+    LEFT JOIN factura f ON f.orden_compra = oc.numero_oc
+    WHERE oc.proyecto ILIKE '%nombre_proyecto%'
+      AND f.fecha_emision >= CURRENT_DATE - INTERVAL '3 months'
+    GROUP BY oc.cc, cc.nombre
+    ORDER BY valor_facturado DESC;
+    ```
+
+    - **Filtros Temporales** (usar `factura.fecha_emision` cuando se necesite filtrar por fecha): 
+      - "última semana": `f.fecha_emision >= CURRENT_DATE - INTERVAL '7 days'`
+      - "último mes": `f.fecha_emision >= CURRENT_DATE - INTERVAL '1 month'`
+      - "últimos 3 meses": `f.fecha_emision >= CURRENT_DATE - INTERVAL '3 months'`
+      - "este año": `f.fecha_emision >= DATE_TRUNC('year', CURRENT_DATE)`
+
+    ### RESPUESTA CUANDO NO HAY FACTURAS PERO SÍ OC:
+    Si hay órdenes de compra pero no facturas asociadas, informar:
+    - Cuántas OC tiene el proyecto por centro de costos
+    - Que no se han recibido facturas para esas OC
+    - Mostrar el valor presupuestado (oc.monto) si está disponible
+
     ### REGLAS DE RESPUESTA Y FORMATO (CRÍTICO) 
+
+    - **SIEMPRE INCLUIR CENTRO DE COSTOS Y PROYECTO EN FACTURAS**: Cuando se listen facturas individuales, SIEMPRE incluir el centro de costos Y el proyecto usando `ordenes_compra_cc`:
+      ```sql
+      SELECT DISTINCT
+          f.numero AS numero_factura,
+          f.fecha_emision,
+          f.total_factura,
+          p.razon_social AS proveedor,
+          COALESCE(oc.proyecto, 'Sin proyecto') AS proyecto,
+          COALESCE(cc.nombre, 'Sin CC asignado') AS centro_costo
+      FROM factura f
+      LEFT JOIN proveedor p ON p.proveedor_id = f.proveedor_id
+      LEFT JOIN ordenes_compra_cc oc ON oc.numero_oc = f.orden_compra
+      LEFT JOIN centro_costos cc ON cc.cc = oc.cc
+      ORDER BY f.fecha_emision DESC
+      LIMIT 20;
+      ```
+      **IMPORTANTE**: El nombre del proyecto está en `ordenes_compra_cc.proyecto`, NO usar `projects.nombre_proyecto` porque `factura.project_id` puede ser NULL.
+      La relación correcta es: `factura.orden_compra` → `ordenes_compra_cc.numero_oc` → obtener `oc.proyecto` y `cc.nombre`
 
     - **Consolidación de Resultados**: Si se requieren **múltiples consultas SQL** para responder una sola pregunta del usuario, el agente **DEBE** consolidar todos los resultados presentando un único resumen al usuario.
 
@@ -605,6 +756,132 @@ root_agent = Agent(
       - Usar formato consistente: `**Nombre**: $Valor` o `**Nombre**: Valor unidades`
       - Separar visualmente con líneas en blanco entre secciones
       - Si hay Top 10, mencionarlo claramente al inicio: "Top 10 Proveedores por Compras:"
+
+    ## OPTIMIZACIÓN DE DATOS PARA CONSULTAS EXTENSAS (CRÍTICO)
+
+    Cuando una consulta potencialmente devuelve **muchos registros** (más de 20-30 filas), el agente **DEBE** optimizar la respuesta usando estadísticas y resúmenes en lugar de traer todos los datos crudos.
+
+    ### ESTRATEGIA DE RESUMEN ESTADÍSTICO:
+    
+    Para consultas que podrían devolver muchos registros, usar esta estructura:
+    ```sql
+    SELECT 
+        -- Estadísticas agregadas
+        COUNT(*) AS total_registros,
+        COUNT(DISTINCT campo_agrupacion) AS categorias_unicas,
+        SUM(campo_numerico) AS suma_total,
+        ROUND(AVG(campo_numerico), 2) AS promedio,
+        MIN(campo_numerico) AS valor_minimo,
+        MAX(campo_numerico) AS valor_maximo,
+        ROUND(STDDEV(campo_numerico), 2) AS desviacion_estandar,
+        -- Rangos de fecha si aplica
+        MIN(fecha_campo)::date AS fecha_inicio,
+        MAX(fecha_campo)::date AS fecha_fin
+    FROM tabla
+    WHERE condiciones;
+    ```
+
+    ### PATRONES DE OPTIMIZACIÓN POR TIPO DE CONSULTA:
+
+    **1. Listado de Facturas (muchas)** → Agrupar por proveedor/proyecto/período:
+    ```sql
+    SELECT 
+        p.razon_social AS proveedor,
+        COUNT(f.factura_id) AS num_facturas,
+        SUM(f.total_factura) AS total_compras,
+        MIN(f.total_factura) AS factura_minima,
+        MAX(f.total_factura) AS factura_maxima,
+        ROUND(AVG(f.total_factura), 0) AS factura_promedio,
+        MIN(f.fecha_emision)::date AS primera_factura,
+        MAX(f.fecha_emision)::date AS ultima_factura
+    FROM factura f
+    JOIN proveedor p ON p.proveedor_id = f.proveedor_id
+    GROUP BY p.razon_social
+    ORDER BY total_compras DESC
+    LIMIT 15;
+    ```
+
+    **2. Productos/Items (muchos)** → Top 10 + estadísticas:
+    ```sql
+    WITH stats AS (
+        SELECT 
+            COUNT(*) AS total_items,
+            SUM(total_linea) AS valor_total,
+            ROUND(AVG(precio_unitario), 2) AS precio_promedio
+        FROM factura_detalle
+    )
+    SELECT 
+        fd.producto_estandarizado,
+        COUNT(*) AS veces_comprado,
+        SUM(fd.cantidad) AS cantidad_total,
+        SUM(fd.total_linea) AS valor_total,
+        MIN(fd.precio_unitario) AS precio_minimo,
+        MAX(fd.precio_unitario) AS precio_maximo,
+        ROUND(AVG(fd.precio_unitario), 0) AS precio_promedio
+    FROM factura_detalle fd
+    GROUP BY fd.producto_estandarizado
+    ORDER BY valor_total DESC
+    LIMIT 10;
+    -- Agregar: "Mostrando Top 10 de N productos totales"
+    ```
+
+    **3. Histórico de Precios (extenso)** → Resumen por período:
+    ```sql
+    SELECT 
+        DATE_TRUNC('month', f.fecha_emision) AS periodo,
+        COUNT(*) AS num_compras,
+        ROUND(AVG(fd.precio_unitario), 0) AS precio_promedio,
+        MIN(fd.precio_unitario) AS precio_minimo,
+        MAX(fd.precio_unitario) AS precio_maximo,
+        SUM(fd.cantidad) AS cantidad_total
+    FROM factura_detalle fd
+    JOIN factura f ON f.factura_id = fd.factura_id
+    WHERE fd.producto_estandarizado ILIKE '%producto%'
+    GROUP BY DATE_TRUNC('month', f.fecha_emision)
+    ORDER BY periodo DESC;
+    ```
+
+    **4. Centro de Costos (múltiples)** → Resumen consolidado:
+    ```sql
+    SELECT 
+        COUNT(DISTINCT oc.cc) AS total_centros_costo,
+        COUNT(DISTINCT oc.numero_oc) AS total_ordenes,
+        COUNT(DISTINCT f.factura_id) AS total_facturas,
+        SUM(f.total_factura) AS valor_total_facturado,
+        ROUND(AVG(f.total_factura), 0) AS factura_promedio
+    FROM ordenes_compra_cc oc
+    LEFT JOIN factura f ON f.orden_compra = oc.numero_oc
+    WHERE oc.proyecto ILIKE '%proyecto%';
+    ```
+
+    ### REGLAS DE OPTIMIZACIÓN:
+
+    1. **NUNCA traer más de 50 registros individuales** - usar agregaciones y Top N
+    2. **SIEMPRE incluir conteo total** cuando muestres Top N: "Mostrando Top 10 de 847 registros"
+    3. **PREFERIR resúmenes estadísticos**: COUNT, SUM, AVG, MIN, MAX, STDDEV
+    4. **AGRUPAR por categorías relevantes**: proveedor, proyecto, centro de costo, mes/año
+    5. **INCLUIR rangos de fechas** cuando el período sea extenso
+    6. **CALCULAR porcentajes** cuando sea útil para el análisis: `ROUND(valor * 100.0 / SUM(valor) OVER(), 2) AS porcentaje`
+    
+    ### FORMATO DE RESPUESTA OPTIMIZADA:
+
+    Cuando uses resúmenes, presentar así:
+    ```
+    ## Resumen de [Tema] - [Período]
+
+    **Estadísticas Generales:**
+    - Total de registros: X
+    - Suma total: $Y
+    - Promedio: $Z
+    - Rango: $Min - $Max
+
+    **Top 10 por [Criterio]:**
+    1. **Categoría A**: $Valor (X%)
+    2. **Categoría B**: $Valor (Y%)
+    ...
+    
+    *Nota: Mostrando Top 10 de N registros totales*
+    ```
 
     ## GENERATIVE BI - VISUALIZACIÓN DE DATOS
 
