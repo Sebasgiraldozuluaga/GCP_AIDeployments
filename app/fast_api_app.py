@@ -13,11 +13,18 @@
 # limitations under the License.
 
 import os
+import warnings
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from google.adk.cli.fast_api import get_fast_api_app
 from app.app_utils.typing import Feedback
+
+# Suppress Telemetry API warnings in local development
+warnings.filterwarnings("ignore", category=UserWarning, message=".*Telemetry API.*")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*Failed to export span.*")
+warnings.filterwarnings("ignore", message=".*LogRecord init with.*trace_id.*span_id.*")
+warnings.filterwarnings("ignore", message=".*LogDeprecatedInitWarning.*")
 
 allow_origins = (
     os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else ["*"]
@@ -32,13 +39,17 @@ session_service_uri = None
 
 artifact_service_uri = f"gs://{logs_bucket_name}" if logs_bucket_name else None
 
+# Only enable cloud telemetry in production (when LOGS_BUCKET_NAME is set)
+# This prevents Telemetry API warnings in local development
+enable_otel = bool(logs_bucket_name) and os.getenv("ENABLE_OTEL", "false").lower() == "true"
+
 app: FastAPI = get_fast_api_app(
     agents_dir=AGENT_DIR,
     web=True,
     artifact_service_uri=artifact_service_uri,
     allow_origins=allow_origins,
     session_service_uri=session_service_uri,
-    otel_to_cloud=True,
+    otel_to_cloud=enable_otel,
 )
 app.title = "raju-shop"
 app.description = "API for interacting with the Agent raju-shop"

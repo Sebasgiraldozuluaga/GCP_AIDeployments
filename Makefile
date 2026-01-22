@@ -11,16 +11,18 @@ install:
 # Playground Targets
 # ==============================================================================
 
-# Launch local dev playground
+# Launch local dev playground with Generative BI
 playground:
 	@echo "==============================================================================="
-	@echo "| 🚀 Starting your agent playground...                                        |"
+	@echo "| 🚀 Starting your agent playground with Generative BI...                     |"
 	@echo "|                                                                             |"
-	@echo "| 💡 Try asking: What's the weather in San Francisco?                         |"
+	@echo "| 📊 Frontend con visualizaciones: http://localhost:8000/                    |"
 	@echo "|                                                                             |"
-	@echo "| 🔍 IMPORTANT: Select the 'app' folder to interact with your agent.          |"
+	@echo "| 💡 Prueba preguntando: 'Total de compras por proveedor'                     |"
+	@echo "|                                                                             |"
+	@echo "| 🔍 El servidor se recargará automáticamente al cambiar archivos             |"
 	@echo "==============================================================================="
-	uv run adk web . --port 8501 --reload_agents
+	uv run uvicorn app.fast_api_app:app --host 0.0.0.0 --port 8000 --reload
 
 # ==============================================================================
 # Local Development Commands
@@ -29,6 +31,17 @@ playground:
 # Launch local development server with hot-reload
 local-backend:
 	uv run uvicorn app.fast_api_app:app --host localhost --port 8000 --reload
+
+# Launch ADK dev-ui (original, sin visualizaciones)
+dev-ui:
+	@echo "==============================================================================="
+	@echo "| 🚀 Starting ADK dev-ui (original)...                                        |"
+	@echo "|                                                                             |"
+	@echo "| 📊 Dev UI: http://localhost:8501/dev-ui/                                    |"
+	@echo "|                                                                             |"
+	@echo "| 🔍 IMPORTANT: Select the 'app' folder to interact with your agent.          |"
+	@echo "==============================================================================="
+	uv run adk web . --port 8501 --reload_agents
 
 # ==============================================================================
 # Backend Deployment Targets
