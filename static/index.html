@@ -773,9 +773,19 @@
                 </div>
             </div>
             <!-- Updated status indicator to be dynamic -->
-            <div class="flex items-center gap-2">
-                <div id="statusIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                <span id="statusText" class="text-sm text-gray-600 font-medium">Conectando...</span>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div id="statusIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span id="statusText" class="text-sm text-gray-600 font-medium">Conectando...</span>
+                </div>
+                <button 
+                    id="clearHistoryBtn"
+                    onclick="clearChatHistoryAndReload()"
+                    class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                    title="Limpiar historial de conversación"
+                >
+                    🗑️ Limpiar
+                </button>
             </div>
         </div>
     </header>
@@ -1650,9 +1660,270 @@
         const statusIndicator = document.getElementById('statusIndicator');
         const statusText = document.getElementById('statusText');
 
+        // ============================================
+        // LOCALSTORAGE PERSISTENCE
+        // ============================================
+        const STORAGE_KEY = 'iserv_chat_history';
+        const STORAGE_SESSION_KEY = 'iserv_session_id';
+        const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
+
+        /**
+         * Save message to localStorage
+         */
+        function saveMessageToStorage(text, type, biData = null) {
+            try {
+                const messages = loadMessagesFromStorage();
+                const messageData = {
+                    text: text,
+                    type: type,
+                    timestamp: new Date().toISOString(),
+                    biData: biData // Store Generative BI data if available
+                };
+                
+                messages.push(messageData);
+                
+                // Limit to last 100 messages to prevent storage overflow
+                const maxMessages = 50;
+                if (messages.length > maxMessages) {
+                    messages.splice(0, messages.length - maxMessages);
+                }
+                
+                // Check storage size
+                const dataStr = JSON.stringify(messages);
+                if (dataStr.length > MAX_STORAGE_SIZE) {
+                    // Remove oldest messages until under limit
+                    while (dataStr.length > MAX_STORAGE_SIZE && messages.length > 10) {
+                        messages.shift();
+                    }
+                }
+                
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+                console.log('[Storage] Message saved, total messages:', messages.length);
+            } catch (e) {
+                console.error('[Storage] Error saving message:', e);
+                // If storage is full, try to clear old messages
+                if (e.name === 'QuotaExceededError') {
+                    console.warn('[Storage] Storage full, clearing old messages');
+                    try {
+                        const messages = loadMessagesFromStorage();
+                        // Keep only last 20 messages
+                        const recentMessages = messages.slice(-20);
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(recentMessages));
+                    } catch (e2) {
+                        console.error('[Storage] Failed to clear old messages:', e2);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Load messages from localStorage
+         */
+        function loadMessagesFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const messages = JSON.parse(stored);
+                    console.log('[Storage] Loaded', messages.length, 'messages from storage');
+                    return messages;
+                }
+            } catch (e) {
+                console.error('[Storage] Error loading messages:', e);
+                // Clear corrupted data
+                localStorage.removeItem(STORAGE_KEY);
+            }
+            return [];
+        }
+
+        /**
+         * Clear chat history from storage
+         */
+        function clearChatHistory() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(STORAGE_SESSION_KEY);
+                messagesContainer.innerHTML = '';
+                console.log('[Storage] Chat history cleared');
+            } catch (e) {
+                console.error('[Storage] Error clearing history:', e);
+            }
+        }
+
+        /**
+         * Clear chat history and reload page
+         */
+        window.clearChatHistoryAndReload = function() {
+            if (confirm('¿Estás seguro de que quieres limpiar todo el historial de conversación? Esta acción no se puede deshacer.')) {
+                clearChatHistory();
+                location.reload();
+            }
+        };
+
+        /**
+         * Save session ID to storage
+         */
+        function saveSessionId(id) {
+            try {
+                localStorage.setItem(STORAGE_SESSION_KEY, id);
+            } catch (e) {
+                console.error('[Storage] Error saving session ID:', e);
+            }
+        }
+
+        /**
+         * Load session ID from storage
+         */
+        function loadSessionId() {
+            try {
+                return localStorage.getItem(STORAGE_SESSION_KEY);
+            } catch (e) {
+                console.error('[Storage] Error loading session ID:', e);
+                return null;
+            }
+        }
+
+        /**
+         * Restore messages from storage and render them
+         */
+        function restoreChatHistory() {
+            const messages = loadMessagesFromStorage();
+            if (messages.length === 0) {
+                return false; // No history to restore
+            }
+
+            console.log('[Storage] Restoring', messages.length, 'messages');
+            
+            // Clear container first
+            messagesContainer.innerHTML = '';
+            
+            // Restore each message
+            messages.forEach(msg => {
+                // Parse Generative BI data if present
+                let biData = null;
+                if (msg.biData) {
+                    biData = msg.biData;
+                }
+                
+                // Render message (reuse addMessage but skip saving to avoid duplicate)
+                renderMessageFromStorage(msg.text, msg.type, biData);
+            });
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            return true; // History was restored
+        }
+
+        /**
+         * Render message from storage (without saving again)
+         */
+        function renderMessageFromStorage(text, type, biData = null) {
+            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'system') {
+                messageDiv.className = 'flex justify-center';
+                messageDiv.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 max-w-xl">
+                        <p class="text-yellow-800 text-sm text-center">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            } else if (type === 'user') {
+                messageDiv.className = 'flex items-start gap-3 justify-end';
+                messageDiv.innerHTML = `
+                    <div class="flex-1 flex flex-col items-end">
+                        <div class="bg-iserv-green rounded-2xl rounded-tr-sm px-5 py-3 inline-block max-w-xl">
+                            <p class="text-white leading-relaxed">${escapeHtml(text)}</p>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1 mr-1">${time}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-iserv-black rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                `;
+            } else {
+                // Bot message - Check for Generative BI visualization
+                let messageContent = '';
+                let visualizationHtml = '';
+                let thinkingHtml = '';
+
+                if (biData) {
+                    const viz = biData.visualization;
+                    const thinking = biData.thinking;
+                    
+                    // Render thinking chain if available
+                    if (thinking && thinking.length > 0) {
+                        thinkingHtml = renderThinkingChain(thinking);
+                    }
+                    
+                    // Render the visualization
+                    if (viz) {
+                        visualizationHtml = renderVisualization(viz);
+                    }
+                    
+                    // Use stored text
+                    messageContent = biData.text || text;
+                } else {
+                    // Try to parse Generative BI from text
+                    const biResult = parseGenerativeBIResponse(text);
+                    if (biResult.hasVisualization || biResult.biData) {
+                        const viz = biResult.biData?.visualization;
+                        const thinking = biResult.biData?.thinking;
+                        
+                        if (thinking && thinking.length > 0) {
+                            thinkingHtml = renderThinkingChain(thinking);
+                        }
+                        
+                        if (viz) {
+                            visualizationHtml = renderVisualization(viz);
+                        }
+                        
+                        messageContent = biResult.biData?.text || biResult.cleanText;
+                    } else {
+                        messageContent = text;
+                    }
+                }
+
+                messageDiv.className = 'flex items-start gap-3';
+                messageDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-iserv-green rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1" style="max-width: calc(100% - 52px);">
+                        ${thinkingHtml}
+                        ${messageContent ? `
+                        <div class="bg-gray-100 rounded-2xl rounded-tl-sm px-5 py-3 inline-block max-w-full">
+                            <div class="text-gray-800 leading-relaxed whitespace-pre-wrap markdown-content">${renderMarkdown(messageContent)}</div>
+                        </div>
+                        ` : ''}
+                        ${visualizationHtml}
+                        <p class="text-xs text-gray-400 mt-1 ml-1">${time}</p>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+        }
+
         async function initializeSession() {
             try {
                 updateStatus('Conectando...', false);
+
+                // Try to restore chat history first
+                const historyRestored = restoreChatHistory();
+                
+                // Try to restore session ID from storage
+                const storedSessionId = loadSessionId();
+                if (storedSessionId && historyRestored) {
+                    console.log('[v0] Attempting to reuse stored session:', storedSessionId);
+                    // Try to validate the session by checking if it still exists
+                    // For now, we'll create a new session but keep the history
+                }
 
                 console.log('[v0] Attempting to connect to:', `${API_BASE_URL}/apps/${APP_NAME}/users/${USER_ID}/sessions`);
 
@@ -1676,12 +1947,17 @@
 
                 const data = await response.json();
                 sessionId = data.id;
+                saveSessionId(sessionId);
 
                 updateStatus('En línea', true);
                 console.log('[v0] Session initialized successfully:', sessionId);
 
-                // Add welcome message
-                addMessage('¡Hola! Soy I-SERV BOT, tu asistente virtual para gestión interna. ¿En qué puedo ayudarte hoy?', 'bot');
+                // Only add welcome message if no history was restored
+                if (!historyRestored) {
+                    addMessage('¡Hola! Soy I-SERV BOT, tu asistente virtual para gestión interna. ¿En qué puedo ayudarte hoy?', 'bot');
+                } else {
+                    console.log('[v0] Chat history restored, skipping welcome message');
+                }
 
             } catch (error) {
                 console.error('[v0] Error initializing session:', error);
@@ -2003,17 +2279,18 @@
             }
         });
 
-        function addMessage(text, type) {
+        function addMessage(text, type, skipSave = false) {
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             
             const messageDiv = document.createElement('div');
+            let biData = null; // Store Generative BI data for persistence
             
             if (type === 'system') {
                 // System message (centered, different style)
                 messageDiv.className = 'flex justify-center';
                 messageDiv.innerHTML = `
                     <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 max-w-xl">
-                        <p class="text-yellow-800 text-sm text-center">${text}</p>
+                        <p class="text-yellow-800 text-sm text-center">${escapeHtml(text)}</p>
                     </div>
                 `;
             } else if (type === 'user') {
@@ -2021,7 +2298,7 @@
                 messageDiv.innerHTML = `
                     <div class="flex-1 flex flex-col items-end">
                         <div class="bg-iserv-green rounded-2xl rounded-tr-sm px-5 py-3 inline-block max-w-xl">
-                            <p class="text-white leading-relaxed">${text}</p>
+                            <p class="text-white leading-relaxed">${escapeHtml(text)}</p>
                         </div>
                         <p class="text-xs text-gray-400 mt-1 mr-1">${time}</p>
                     </div>
@@ -2044,6 +2321,9 @@
                 let thinkingHtml = '';
 
                 if (biResult.hasVisualization || biResult.biData) {
+                    // Store Generative BI data for persistence
+                    biData = biResult.biData;
+                    
                     const viz = biResult.biData?.visualization;
                     const thinking = biResult.biData?.thinking;
                     console.log('[addMessage] Viz type:', viz?.type, 'Visualizable:', viz?.visualizable);
@@ -2086,6 +2366,11 @@
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Save to localStorage (unless explicitly skipped, e.g., when restoring from storage)
+            if (!skipSave) {
+                saveMessageToStorage(text, type, biData);
+            }
         }
 
         /**
