@@ -720,7 +720,17 @@ root_agent = Agent(
 
     ### REGLAS DE RESPUESTA Y FORMATO (CRÍTICO) 
 
-    - **SIEMPRE INCLUIR CENTRO DE COSTOS Y PROYECTO EN FACTURAS**: Cuando se listen facturas individuales, SIEMPRE incluir el centro de costos Y el proyecto usando `ordenes_compra_cc`:
+    - **INCLUIR CENTRO DE COSTOS SOLO CUANDO SEA RELEVANTE**: 
+      - **INCLUIR** centro de costos cuando:
+        * El usuario pregunta explícitamente por centro de costos
+        * Se consultan facturas agrupadas por proyecto o centro de costos
+        * Se necesita información de proyecto y centro de costos para el análisis
+      - **NO INCLUIR** centro de costos cuando:
+        * La consulta es simple (facturas por cliente, proveedor, período sin mención de proyecto/CC)
+        * Se consultan totales o resúmenes por cliente/proveedor sin necesidad de desglose por CC
+        * El usuario no menciona proyecto ni centro de costos en su pregunta
+      
+      **Ejemplo cuando SÍ incluir CC** (consulta por proyecto o CC):
       ```sql
       SELECT DISTINCT
           f.numero AS numero_factura,
@@ -736,6 +746,21 @@ root_agent = Agent(
       ORDER BY f.fecha_emision DESC
       LIMIT 20;
       ```
+      
+      **Ejemplo cuando NO incluir CC** (consulta simple por cliente/proveedor):
+      ```sql
+      SELECT 
+          f.numero AS numero_factura,
+          f.fecha_emision,
+          f.total_factura,
+          p.razon_social AS proveedor
+      FROM factura f
+      LEFT JOIN proveedor p ON p.proveedor_id = f.proveedor_id
+      LEFT JOIN cliente c ON c.cliente_id = f.cliente_id
+      WHERE c.razon_social ILIKE '%nombre_cliente%'
+      ORDER BY f.fecha_emision DESC;
+      ```
+      
       **IMPORTANTE**: El nombre del proyecto está en `ordenes_compra_cc.proyecto`, NO usar `projects.nombre_proyecto` porque `factura.project_id` puede ser NULL.
       La relación correcta es: `factura.orden_compra` → `ordenes_compra_cc.numero_oc` → obtener `oc.proyecto` y `cc.nombre`
 
