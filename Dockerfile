@@ -23,8 +23,10 @@ COPY ./pyproject.toml ./README.md ./uv.lock* ./
 COPY ./app ./app
 
 # Create static files directory and copy frontend
-RUN mkdir -p /code/static
-COPY ./index.html /code/static/index.html
+RUN mkdir -p /code/static/images
+# Copy the static folder with suggested prompts
+COPY ./static /code/static
+# Copy images folder
 COPY ./images /code/static/images
 
 RUN uv sync --frozen
