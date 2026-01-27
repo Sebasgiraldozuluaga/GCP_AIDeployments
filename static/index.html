@@ -1821,6 +1821,8 @@
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             
             const messageDiv = document.createElement('div');
+            let vizConfig = null; // Store viz config for later initialization
+            let chartId = null; // Store chart ID for initialization
             
             if (type === 'system') {
                 messageDiv.className = 'flex justify-center';
@@ -1854,14 +1856,21 @@
                     const viz = biData.visualization;
                     const thinking = biData.thinking;
                     
+                    // Store viz config for initialization after DOM insertion
+                    if (viz && viz.visualizable) {
+                        vizConfig = viz;
+                    }
+                    
                     // Render thinking chain if available
                     if (thinking && thinking.length > 0) {
                         thinkingHtml = renderThinkingChain(thinking);
                     }
                     
-                    // Render the visualization
+                    // Render the visualization HTML (but don't initialize chart yet)
                     if (viz) {
-                        visualizationHtml = renderVisualization(viz);
+                        const result = renderVisualizationHTML(viz);
+                        visualizationHtml = result.html;
+                        chartId = result.chartId;
                     }
                     
                     // Use stored text
@@ -1873,12 +1882,19 @@
                         const viz = biResult.biData?.visualization;
                         const thinking = biResult.biData?.thinking;
                         
+                        // Store viz config for initialization after DOM insertion
+                        if (viz && viz.visualizable) {
+                            vizConfig = viz;
+                        }
+                        
                         if (thinking && thinking.length > 0) {
                             thinkingHtml = renderThinkingChain(thinking);
                         }
                         
                         if (viz) {
-                            visualizationHtml = renderVisualization(viz);
+                            const result = renderVisualizationHTML(viz);
+                            visualizationHtml = result.html;
+                            chartId = result.chartId;
                         }
                         
                         messageContent = biResult.biData?.text || biResult.cleanText;
@@ -1907,7 +1923,99 @@
                 `;
             }
             
+            // Insert into DOM first
             messagesContainer.appendChild(messageDiv);
+            
+            // Initialize chart after DOM insertion if we have a visualization
+            if (vizConfig && vizConfig.visualizable && vizConfig.type !== 'table' && vizConfig.type !== 'none' && chartId) {
+                setTimeout(() => {
+                    initializeChartFromStorage(messageDiv, vizConfig, chartId);
+                }, 150);
+            }
+        }
+
+        /**
+         * Render visualization HTML without initializing the chart
+         */
+        function renderVisualizationHTML(vizConfig) {
+            const { type, title, data, fullData, isTop10, totalRecords } = vizConfig;
+            const chartId = `chart-${++chartCounter}`;
+
+            // Determine which data to use for download
+            const downloadData = fullData && fullData.rows && fullData.rows.length > 0 ? fullData : data;
+            const hasMoreData = totalRecords && totalRecords > 10;
+
+            if (type === 'table' || type === 'none') {
+                let html = renderDataTable(data, title);
+                if (hasMoreData && downloadData) {
+                    html += renderDownloadButton(downloadData, title, totalRecords);
+                }
+                return { html, chartId: null };
+            }
+
+            const chartConfig = createChartConfig(vizConfig);
+            if (!chartConfig) {
+                let html = renderDataTable(data, title);
+                if (hasMoreData && downloadData) {
+                    html += renderDownloadButton(downloadData, title, totalRecords);
+                }
+                return { html, chartId: null };
+            }
+
+            // Top 10 indicator
+            const top10Note = isTop10 && totalRecords > 10 
+                ? `<div class="text-xs text-gray-500 mt-1 ml-1 italic">Mostrando Top 10 de ${totalRecords} registros totales</div>` 
+                : '';
+
+            // Download button if there are more records
+            const downloadButton = hasMoreData && downloadData 
+                ? renderDownloadButton(downloadData, title, totalRecords)
+                : '';
+
+            // Create chart container HTML (chart will be initialized separately)
+            const html = `
+                <div class="viz-badge">
+                    ${getVizIcon(type)}
+                    <span>Generative BI - ${type.toUpperCase()}</span>
+                </div>
+                <div class="chart-container">
+                    <div id="${chartId}" class="chart-wrapper"></div>
+                </div>
+                ${top10Note}
+                ${downloadButton}
+            `;
+            
+            return { html, chartId };
+        }
+
+        /**
+         * Initialize chart from storage after DOM insertion
+         */
+        function initializeChartFromStorage(messageDiv, vizConfig, chartId) {
+            const chartDom = messageDiv.querySelector(`#${chartId}`);
+            
+            if (chartDom) {
+                try {
+                    const chartConfig = createChartConfig(vizConfig);
+                    if (chartConfig) {
+                        const chart = echarts.init(chartDom);
+                        chart.setOption(chartConfig);
+                        
+                        // Handle resize
+                        const resizeHandler = () => chart.resize();
+                        window.addEventListener('resize', resizeHandler);
+                        
+                        // Store resize handler on chart element for cleanup if needed
+                        chartDom._resizeHandler = resizeHandler;
+                        
+                        console.log('[Storage] Chart initialized from storage:', chartId);
+                    }
+                } catch (e) {
+                    console.error('[Storage] Error initializing chart from storage:', e);
+                }
+            } else {
+                console.warn('[Storage] Chart container not found:', chartId);
+            }
         }
 
         async function initializeSession() {
