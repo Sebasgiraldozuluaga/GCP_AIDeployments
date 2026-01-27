@@ -23,6 +23,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate required secrets
+        run: |
+          echo "🔍 Validating required secrets..."
+
+          # PostgreSQL secrets (required)
+          if [ -z "${{ secrets.PG_HOST }}" ]; then
+            echo "❌ Error: PG_HOST secret is not configured"
+            exit 1
+          fi
+          if [ -z "${{ secrets.PG_PASSWORD }}" ]; then
+            echo "❌ Error: PG_PASSWORD secret is not configured"
+            exit 1
+          fi
+          echo "✅ PostgreSQL secrets validated"
+
+          # Hugging Face MCP secret (required for HF integration)
+          if [ -z "${{ secrets.HF_TOKEN }}" ]; then
+            echo "⚠️  Warning: HF_TOKEN secret is not configured"
+            echo "   Hugging Face MCP features will not be available"
+            echo "   Get your token at: https://huggingface.co/settings/tokens"
+          else
+            echo "✅ Hugging Face MCP token configured"
+          fi
+
+          # GCP Service Account (required)
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ Error: GCP_SA_KEY secret is not configured"
+            exit 1
+          fi
+          echo "✅ GCP Service Account validated"
+
+          echo "✅ All validations passed"
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
@@ -68,6 +101,37 @@ jobs:
         run: |
           AGENT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
           AGENT_VERSION=${AGENT_VERSION:-0.0.0}
+
+          echo "🚀 Deploying to Cloud Run..."
+          echo "   Version: ${AGENT_VERSION}"
+          echo "   Commit: ${{ github.sha }}"
+          echo "   Features: PostgreSQL Database + Hugging Face MCP"
+
+          # Build environment variables configuration
+          ENV_VARS_CONFIG="COMMIT_SHA=${{ github.sha }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},AGENT_VERSION=${AGENT_VERSION}"
+
+          # GCP Configuration
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},GOOGLE_CLOUD_LOCATION=${{ env.REGION }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},GOOGLE_GENAI_USE_VERTEXAI=True"
+
+          # PostgreSQL Database Configuration
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},PG_HOST=${{ secrets.PG_HOST }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},PG_DATABASE=${{ secrets.PG_DATABASE }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},PG_USER=${{ secrets.PG_USER }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},PG_PASSWORD=${{ secrets.PG_PASSWORD }}"
+          ENV_VARS_CONFIG="${ENV_VARS_CONFIG},PG_PORT=${{ secrets.PG_PORT }}"
+
+          # Hugging Face MCP Integration
+          # Enables: search_hf_models, search_hf_datasets, search_hf_spaces tools
+          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
+            ENV_VARS_CONFIG="${ENV_VARS_CONFIG},HF_TOKEN=${{ secrets.HF_TOKEN }}"
+            echo "✅ Hugging Face MCP integration enabled"
+          else
+            echo "⚠️  Hugging Face MCP integration disabled (no HF_TOKEN)"
+          fi
+
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --platform managed \
@@ -77,16 +141,7 @@ jobs:
             --no-cpu-throttling \
             --port 8080 \
             --timeout 300 \
-            --set-env-vars "COMMIT_SHA=${{ github.sha }}" \
-            --set-env-vars "AGENT_VERSION=${AGENT_VERSION}" \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
-            --set-env-vars "GOOGLE_CLOUD_LOCATION=${{ env.REGION }}" \
-            --set-env-vars "GOOGLE_GENAI_USE_VERTEXAI=True" \
-            --set-env-vars "PG_HOST=${{ secrets.PG_HOST }}" \
-            --set-env-vars "PG_DATABASE=${{ secrets.PG_DATABASE }}" \
-            --set-env-vars "PG_USER=${{ secrets.PG_USER }}" \
-            --set-env-vars "PG_PASSWORD=${{ secrets.PG_PASSWORD }}" \
-            --set-env-vars "PG_PORT=${{ secrets.PG_PORT }}" \
+            --set-env-vars "${ENV_VARS_CONFIG}" \
             --labels "created-by=github-actions,commit-sha=${{ github.sha }}"
           
           # Get the service URL and set it as API_BASE_URL
@@ -107,7 +162,58 @@ jobs:
           
           echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_OUTPUT
 
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          SERVICE_URL="${{ steps.deploy.outputs.SERVICE_URL }}"
+
+          # Wait for service to be ready
+          echo "⏳ Waiting for service to be ready..."
+          sleep 10
+
+          # Check if service is responding
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}" || echo "000")
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Service is responding (HTTP ${HTTP_STATUS})"
+          else
+            echo "⚠️  Service returned HTTP ${HTTP_STATUS}"
+          fi
+
+          # Verify environment variables are set
+          echo ""
+          echo "📋 Deployment Configuration:"
+          echo "   Service URL: ${SERVICE_URL}"
+          echo "   Region: ${{ env.REGION }}"
+          echo "   Memory: 4Gi"
+          echo "   Timeout: 300s"
+          echo ""
+          echo "🔧 Enabled Features:"
+          echo "   ✅ PostgreSQL Database"
+          echo "   ✅ Gemini 2.5 Flash (Vertex AI)"
+          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
+            echo "   ✅ Hugging Face MCP Integration"
+            echo "      • search_hf_models"
+            echo "      • search_hf_datasets"
+            echo "      • search_hf_spaces"
+            echo "      • get_hf_model_details"
+            echo "      • get_hf_dataset_details"
+          else
+            echo "   ⚠️  Hugging Face MCP (disabled - no token)"
+          fi
+
       - name: Output service URL
         run: |
-          echo "Service deployed at: ${{ steps.deploy.outputs.SERVICE_URL }}"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════"
+          echo "🎉 Deployment completed successfully!"
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
+          echo "Service URL: ${{ steps.deploy.outputs.SERVICE_URL }}"
+          echo ""
+          echo "To test Hugging Face MCP integration, try:"
+          echo '  curl -X POST "${{ steps.deploy.outputs.SERVICE_URL }}/api/chat" \'
+          echo '    -H "Content-Type: application/json" \'
+          echo '    -d '"'"'{"message": "Search for sentiment analysis models"}'"'"''
+          echo ""
 

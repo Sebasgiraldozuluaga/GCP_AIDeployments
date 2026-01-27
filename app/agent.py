@@ -35,6 +35,15 @@ from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain.agents import create_sql_agent
 from langchain_google_vertexai import ChatVertexAI
 
+# Import Hugging Face MCP tools
+from app.hf_tools import (
+    search_hf_models,
+    search_hf_datasets,
+    search_hf_spaces,
+    get_hf_model_details,
+    get_hf_dataset_details
+)
+
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 os.environ["GOOGLE_CLOUD_LOCATION"] = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -932,8 +941,36 @@ root_agent = Agent(
     - Evitar SELECT * si no es necesario.
 
     Usa la herramienta `query_database` para ejecutar consultas en la base de datos PostgreSQL.
+
+    ## HERRAMIENTAS DE HUGGING FACE HUB
+
+    Tienes acceso a las siguientes herramientas para explorar y buscar recursos en Hugging Face Hub:
+
+    1. **search_hf_models**: Busca modelos de IA (transformers, diffusion, etc.)
+       - Útil para encontrar modelos pre-entrenados para tareas específicas
+       - Ejemplos: sentiment analysis, image generation, traducción, etc.
+
+    2. **search_hf_datasets**: Busca datasets y conjuntos de datos
+       - Útil para encontrar datos de entrenamiento o benchmarks
+       - Ejemplos: datasets en español, datos de clasificación, QA, etc.
+
+    3. **search_hf_spaces**: Busca Spaces (apps Gradio/Streamlit)
+       - Útil para encontrar demos interactivas y aplicaciones ML
+       - Ejemplos: chatbots, generadores de imágenes, etc.
+
+    4. **get_hf_model_details**: Obtiene información detallada de un modelo específico
+    5. **get_hf_dataset_details**: Obtiene información detallada de un dataset específico
+
+    Usa estas herramientas cuando el usuario pregunte sobre modelos de IA, datasets, o aplicaciones ML.
     """,
-    tools=[query_database]
+    tools=[
+        query_database,
+        search_hf_models,
+        search_hf_datasets,
+        search_hf_spaces,
+        get_hf_model_details,
+        get_hf_dataset_details
+    ]
 )
 
 app = App(root_agent=root_agent, name="app")

@@ -19,6 +19,7 @@ dependencies = [
     "langchain-google-vertexai>=2.0.0,<3.0.0",
     "sqlalchemy>=2.0.0,<3.0.0",
     "psycopg2-binary>=2.9.0,<3.0.0",
+    "httpx>=0.28.0,<1.0.0",
 ]
 requires-python = ">=3.10,<3.14"
 
