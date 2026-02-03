@@ -290,10 +290,11 @@ print(details)
 - Evita overhead de múltiples conexiones
 - Gestión eficiente de recursos
 
-### 2. Manejo Asíncrono
-- Cliente HTTP asíncrono con `httpx`
-- Wrappers síncronos para compatibilidad con Google ADK
-- Event loop automático cuando es necesario
+### 2. Arquitectura Síncrona Simple
+- Cliente HTTP síncrono con `httpx.Client`
+- Sin complejidad de async/await innecesaria
+- Compatible nativamente con Google ADK tools (síncronos)
+- Funciona en cualquier contexto sin problemas de event loop
 
 ### 3. Validación de Parámetros
 - Límites de resultados (max 20)
@@ -358,6 +359,15 @@ print(datasets)
 ```
 
 ## Troubleshooting
+
+### ✅ Event Loop Errors (Completamente Resueltos)
+
+**v1.2**: Los errores de event loop han sido completamente eliminados al cambiar a arquitectura síncrona pura.
+
+- ❌ "asyncio.run() cannot be called from a running event loop" → **Resuelto**
+- ❌ "Event loop is closed" → **Resuelto**
+
+**Solución implementada**: Cliente HTTP completamente síncrono (`httpx.Client`), sin async/await.
 
 ### Error: "Missing HF_TOKEN"
 

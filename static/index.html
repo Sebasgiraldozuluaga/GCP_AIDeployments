@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,29 +23,29 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
+
         * {
             font-family: 'Inter', sans-serif;
         }
-        
+
         .chat-container {
             height: calc(100vh - 80px);
         }
-        
+
         .messages-container {
             height: calc(100% - 80px);
             overflow-y: auto;
             scroll-behavior: smooth;
         }
-        
+
         .messages-container::-webkit-scrollbar {
             width: 6px;
         }
-        
+
         .messages-container::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
-        
+
         .messages-container::-webkit-scrollbar-thumb {
             background: #009639;
             border-radius: 3px;
@@ -78,10 +79,14 @@
         }
 
         @keyframes typing {
-            0%, 60%, 100% {
+
+            0%,
+            60%,
+            100% {
                 transform: translateY(0);
                 opacity: 0.7;
             }
+
             30% {
                 transform: translateY(-6px);
                 opacity: 1;
@@ -285,11 +290,30 @@
             font-size: 0.7rem;
         }
 
-        .step-icon.query { background: #dbeafe; color: #1d4ed8; }
-        .step-icon.schema { background: #fef3c7; color: #b45309; }
-        .step-icon.sql { background: #d1fae5; color: #059669; }
-        .step-icon.result { background: #ede9fe; color: #7c3aed; }
-        .step-icon.analyze { background: #fce7f3; color: #db2777; }
+        .step-icon.query {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .step-icon.schema {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .step-icon.sql {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .step-icon.result {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .step-icon.analyze {
+            background: #fce7f3;
+            color: #db2777;
+        }
 
         .step-content {
             flex: 1;
@@ -333,6 +357,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -413,6 +438,7 @@
                 opacity: 0;
                 transform: translateX(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -623,6 +649,7 @@
                 opacity: 0;
                 transform: translateY(-8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -680,7 +707,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .dropdown-empty {
@@ -761,12 +790,14 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <img src="/static/images/LOGO-I-SERV.png" alt="Logo de I‑SERV" class="h-12 w-auto" width="48" height="48" loading="lazy">
+                <img src="/static/images/LOGO-I-SERV.png" alt="Logo de I‑SERV" class="h-12 w-auto" width="48"
+                    height="48" loading="lazy">
                 <div>
                     <h1 class="text-xl font-bold text-iserv-black">I-SERV BOT</h1>
                     <p class="text-sm text-gray-500">Asistente Virtual Interno</p>
@@ -778,12 +809,9 @@
                     <div id="statusIndicator" class="w-2 h-2 bg-gray-400 rounded-full"></div>
                     <span id="statusText" class="text-sm text-gray-600 font-medium">Conectando...</span>
                 </div>
-                <button 
-                    id="clearHistoryBtn"
-                    onclick="clearChatHistoryAndReload()"
+                <button id="clearHistoryBtn" onclick="clearChatHistoryAndReload()"
                     class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1 rounded hover:bg-gray-100"
-                    title="Limpiar historial de conversación"
-                >
+                    title="Limpiar historial de conversación">
                     🗑️ Limpiar
                 </button>
             </div>
@@ -801,21 +829,15 @@
             <!-- Input Area -->
             <div class="border-t border-gray-200 p-4">
                 <form id="chatForm" class="flex items-end gap-3">
-                    <textarea 
-                        id="messageInput"
-                        rows="1"
-                        placeholder="Escribe tu mensaje aquí..."
+                    <textarea id="messageInput" rows="1" placeholder="Escribe tu mensaje aquí..."
                         class="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-iserv-green focus:border-transparent"
-                        style="max-height: 120px;"
-                    ></textarea>
-                    <button 
-                        type="submit"
-                        id="sendButton"
-                        class="bg-iserv-green text-white px-6 py-3 rounded-xl font-semibold hover:bg-iserv-dark-green transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                        style="max-height: 120px;"></textarea>
+                    <button type="submit" id="sendButton"
+                        class="bg-iserv-green text-white px-6 py-3 rounded-xl font-semibold hover:bg-iserv-dark-green transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <span>Enviar</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
                     </button>
                 </form>
@@ -826,8 +848,8 @@
     <script>
         // Configuration - Read API_BASE_URL from meta tag or use current origin as fallback
         const apiBaseUrlMeta = document.querySelector('meta[name="api-base-url"]');
-        const API_BASE_URL = apiBaseUrlMeta 
-            ? apiBaseUrlMeta.getAttribute('content') 
+        const API_BASE_URL = apiBaseUrlMeta
+            ? apiBaseUrlMeta.getAttribute('content')
             : (window.API_BASE_URL || window.location.origin);
         const APP_NAME = 'app';
         const USER_ID = 'web-user';
@@ -848,45 +870,49 @@
             // Use unique delimiters that won't appear in JSON content
             const biRegex = /<<<GENERATIVE_BI_START>>>\n([\s\S]*?)\n<<<GENERATIVE_BI_END>>>/;
             const match = text.match(biRegex);
-            
+
             if (match) {
                 let jsonStr = match[1];
                 console.log('[BI] Found generative-bi block, length:', jsonStr.length);
-                
+
                 try {
                     const biData = JSON.parse(jsonStr);
                     console.log('[BI] JSON parsed successfully');
-                    console.log('[BI] Visualization:', biData.visualization?.type, '- visualizable:', biData.visualization?.visualizable);
-                    
+                    // NEW STRUCTURE: visualizable is at root level, not inside visualization
+                    console.log('[BI] Visualization:', biData.visualization?.type, '- visualizable:', biData.visualizable);
+                    console.log('[BI] Conclusion:', biData.conclusion?.substring(0, 100));
+                    console.log('[BI] Data rows:', biData.data?.rows?.length || 0);
+
                     const textWithoutBI = text.replace(biRegex, '').trim();
                     return {
-                        hasVisualization: biData.visualization && biData.visualization.visualizable,
+                        // NEW: Use biData.visualizable (root level) instead of biData.visualization.visualizable
+                        hasVisualization: biData.visualizable === true && biData.data && biData.data.rows && biData.data.rows.length > 0,
                         biData: biData,
-                        cleanText: textWithoutBI || biData.text
+                        cleanText: textWithoutBI || biData.conclusion || biData.text
                     };
                 } catch (e) {
                     // Extract position from error message
                     const posMatch = e.message.match(/position (\d+)/);
                     const errorPos = posMatch ? parseInt(posMatch[1]) : 0;
-                    
+
                     console.error('[BI] Error parsing JSON:', e.message);
                     console.error('[BI] JSON length:', jsonStr.length);
                     console.error('[BI] Character at error position:', JSON.stringify(jsonStr.charAt(errorPos)));
                     console.error('[BI] Char code at error:', jsonStr.charCodeAt(errorPos));
                     console.error('[BI] Context around error (pos-50 to pos+50):', JSON.stringify(jsonStr.substring(errorPos - 50, errorPos + 50)));
                     console.error('[BI] Last 100 chars of JSON:', JSON.stringify(jsonStr.substring(jsonStr.length - 100)));
-                    
+
                     // Try to fix truncated JSON
                     try {
                         jsonStr = jsonStr.trim();
-                        
+
                         // Check if JSON appears truncated (doesn't end with })
                         if (!jsonStr.endsWith('}')) {
                             console.log('[BI] JSON appears truncated, attempting to fix...');
                             // Find the last complete object/array
                             let lastBrace = jsonStr.lastIndexOf('}');
                             let lastBracket = jsonStr.lastIndexOf(']');
-                            
+
                             // Try to close the JSON properly
                             // Count open braces/brackets
                             let braces = 0, brackets = 0;
@@ -896,9 +922,9 @@
                                 else if (c === '[') brackets++;
                                 else if (c === ']') brackets--;
                             }
-                            
+
                             console.log('[BI] Unclosed braces:', braces, 'brackets:', brackets);
-                            
+
                             // Add closing brackets/braces
                             let suffix = ']'.repeat(brackets) + '}'.repeat(braces);
                             if (suffix) {
@@ -910,14 +936,15 @@
                                 }
                             }
                         }
-                        
+
                         const biData = JSON.parse(jsonStr);
                         console.log('[BI] JSON parsed after fix');
                         const textWithoutBI = text.replace(biRegex, '').trim();
                         return {
-                            hasVisualization: biData.visualization && biData.visualization.visualizable,
+                            // NEW: Use biData.visualizable (root level)
+                            hasVisualization: biData.visualizable === true && biData.data && biData.data.rows && biData.data.rows.length > 0,
                             biData: biData,
-                            cleanText: textWithoutBI || biData.text
+                            cleanText: textWithoutBI || biData.conclusion || biData.text
                         };
                     } catch (e2) {
                         console.error('[BI] Fix attempt failed:', e2.message);
@@ -927,7 +954,7 @@
                     }
                 }
             }
-            
+
             return { hasVisualization: false, cleanText: text };
         }
 
@@ -936,7 +963,7 @@
          */
         function formatAxisLabel(label, fieldName) {
             if (!label) return fieldName || '';
-            
+
             // If it's a monetary field, add currency indicator
             if (isMonetaryField(fieldName) || isMonetaryField(label)) {
                 // Check if already has currency indicator
@@ -944,7 +971,7 @@
                     return `${label} (COP)`;
                 }
             }
-            
+
             // Capitalize first letter and improve readability
             return label.charAt(0).toUpperCase() + label.slice(1).toLowerCase();
         }
@@ -954,38 +981,38 @@
          */
         function createChartConfig(vizConfig) {
             const { type, title, xAxis, yAxis, xAxisLabel, yAxisLabel, series, data, groupBy, legend } = vizConfig;
-            
+
             if (!data || !data.columns || !data.rows) {
                 return null;
             }
 
             const xIndex = data.columns.indexOf(xAxis);
-            const yIndex = data.columns.indexOf(yAxis) !== -1 ? data.columns.indexOf(yAxis) : 
-                           (series && series[0] ? data.columns.indexOf(series[0].field) : 1);
+            const yIndex = data.columns.indexOf(yAxis) !== -1 ? data.columns.indexOf(yAxis) :
+                (series && series[0] ? data.columns.indexOf(series[0].field) : 1);
             const groupIndex = groupBy ? data.columns.indexOf(groupBy) : -1;
 
             // Theme colors
-            const colors = ['#009639', '#00843D', '#4ade80', '#166534', '#15803d', '#22c55e', '#86efac', 
-                          '#10b981', '#059669', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5'];
-            
+            const colors = ['#009639', '#00843D', '#4ade80', '#166534', '#15803d', '#22c55e', '#86efac',
+                '#10b981', '#059669', '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5'];
+
             // Helper function to group data by a dimension
             function groupDataByDimension(rows, xIndex, groupIndex, yIndex) {
                 const grouped = {};
                 const xValues = new Set();
-                
+
                 rows.forEach(row => {
                     const xValue = row[xIndex];
                     const groupValue = row[groupIndex];
                     const yValue = row[yIndex];
-                    
+
                     xValues.add(xValue);
-                    
+
                     if (!grouped[groupValue]) {
                         grouped[groupValue] = {};
                     }
                     grouped[groupValue][xValue] = yValue;
                 });
-                
+
                 return { grouped, xValues: Array.from(xValues).sort() };
             }
 
@@ -997,16 +1024,16 @@
                     }
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
-                            trigger: 'axis', 
+                        tooltip: {
+                            trigger: 'axis',
                             axisPointer: { type: 'shadow' },
-                            formatter: function(params) {
+                            formatter: function (params) {
                                 if (!params || params.length === 0) return '';
                                 const param = params[0];
                                 const value = param.value;
                                 const seriesName = param.seriesName || yAxis;
-                                const formattedValue = isMonetaryField(yAxis) 
-                                    ? formatCurrency(value) 
+                                const formattedValue = isMonetaryField(yAxis)
+                                    ? formatCurrency(value)
                                     : formatNumber(value, yAxis);
                                 return `${param.axisValue}<br/>${seriesName}: ${formattedValue}`;
                             }
@@ -1033,7 +1060,7 @@
                             name: series && series[0] ? series[0].name : yAxis,
                             type: 'bar',
                             data: data.rows.map(row => row[yIndex]),
-                            itemStyle: { 
+                            itemStyle: {
                                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                                     { offset: 0, color: '#009639' },
                                     { offset: 1, color: '#00843D' }
@@ -1047,15 +1074,15 @@
                 case 'line':
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
+                        tooltip: {
                             trigger: 'axis',
-                            formatter: function(params) {
+                            formatter: function (params) {
                                 if (!params || params.length === 0) return '';
                                 const param = params[0];
                                 const value = param.value;
                                 const seriesName = param.seriesName || yAxis;
-                                const formattedValue = isMonetaryField(yAxis) 
-                                    ? formatCurrency(value) 
+                                const formattedValue = isMonetaryField(yAxis)
+                                    ? formatCurrency(value)
                                     : formatNumber(value, yAxis);
                                 return `${param.axisValue}<br/>${seriesName}: ${formattedValue}`;
                             }
@@ -1095,12 +1122,12 @@
                 case 'pie':
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
-                            trigger: 'item', 
-                            formatter: function(params) {
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: function (params) {
                                 const value = params.value;
-                                const formattedValue = isMonetaryField(yAxis) 
-                                    ? formatCurrency(value) 
+                                const formattedValue = isMonetaryField(yAxis)
+                                    ? formatCurrency(value)
                                     : formatNumber(value, yAxis);
                                 return `${params.name}: ${formattedValue} (${params.percent}%)`;
                             }
@@ -1128,16 +1155,16 @@
                 case 'area':
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
-                            trigger: 'axis', 
+                        tooltip: {
+                            trigger: 'axis',
                             axisPointer: { type: 'cross' },
-                            formatter: function(params) {
+                            formatter: function (params) {
                                 if (!params || params.length === 0) return '';
                                 const param = params[0];
                                 const value = param.value;
                                 const seriesName = param.seriesName || yAxis;
-                                const formattedValue = isMonetaryField(yAxis) 
-                                    ? formatCurrency(value) 
+                                const formattedValue = isMonetaryField(yAxis)
+                                    ? formatCurrency(value)
                                     : formatNumber(value, yAxis);
                                 return `${param.axisValue}<br/>${seriesName}: ${formattedValue}`;
                             }
@@ -1182,21 +1209,21 @@
                         // Fallback to regular bar if no groupBy
                         return createChartConfig({ ...vizConfig, type: 'bar' });
                     }
-                    
+
                     const { grouped, xValues } = groupDataByDimension(data.rows, xIndex, groupIndex, yIndex);
                     const groupValues = Object.keys(grouped).sort();
-                    
+
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
-                            trigger: 'axis', 
+                        tooltip: {
+                            trigger: 'axis',
                             axisPointer: { type: 'shadow' },
-                            formatter: function(params) {
+                            formatter: function (params) {
                                 if (!params || params.length === 0) return '';
                                 let result = `${params[0].axisValue}<br/>`;
                                 params.forEach(param => {
-                                    const formattedValue = isMonetaryField(yAxis) 
-                                        ? formatCurrency(param.value) 
+                                    const formattedValue = isMonetaryField(yAxis)
+                                        ? formatCurrency(param.value)
                                         : formatNumber(param.value, yAxis);
                                     result += `${param.marker} ${param.seriesName}: ${formattedValue}<br/>`;
                                 });
@@ -1234,7 +1261,7 @@
                             type: 'bar',
                             stack: type === 'stackedBar' ? 'Total' : undefined,
                             data: xValues.map(xValue => grouped[groupValue][xValue] || 0),
-                            itemStyle: { 
+                            itemStyle: {
                                 color: colors[idx % colors.length],
                                 borderRadius: type === 'stackedBar' ? [0, 0, 0, 0] : [4, 4, 0, 0]
                             },
@@ -1247,20 +1274,20 @@
                         // Fallback to regular line if no groupBy
                         return createChartConfig({ ...vizConfig, type: 'line' });
                     }
-                    
+
                     const lineGrouped = groupDataByDimension(data.rows, xIndex, groupIndex, yIndex);
                     const lineGroupValues = Object.keys(lineGrouped.grouped).sort();
-                    
+
                     return {
                         title: { text: title, left: 'center', textStyle: { fontSize: 14, fontWeight: 600, color: '#1f2937' } },
-                        tooltip: { 
+                        tooltip: {
                             trigger: 'axis',
-                            formatter: function(params) {
+                            formatter: function (params) {
                                 if (!params || params.length === 0) return '';
                                 let result = `${params[0].axisValue}<br/>`;
                                 params.forEach(param => {
-                                    const formattedValue = isMonetaryField(yAxis) 
-                                        ? formatCurrency(param.value) 
+                                    const formattedValue = isMonetaryField(yAxis)
+                                        ? formatCurrency(param.value)
                                         : formatNumber(param.value, yAxis);
                                     result += `${param.marker} ${param.seriesName}: ${formattedValue}<br/>`;
                                 });
@@ -1322,13 +1349,13 @@
          */
         function renderThinkingChain(thinkingSteps) {
             if (!thinkingSteps || thinkingSteps.length === 0) return '';
-            
+
             const thinkingId = `thinking-${Date.now()}`;
-            
+
             let stepsHtml = thinkingSteps.map((step, index) => {
                 let iconClass = 'query';
                 let icon = '🔍';
-                
+
                 if (step.type === 'schema') {
                     iconClass = 'schema';
                     icon = '📋';
@@ -1342,14 +1369,14 @@
                     iconClass = 'analyze';
                     icon = '🧠';
                 }
-                
+
                 let contentHtml = `<span class="step-label">${step.label || step.type}:</span> ${escapeHtml(step.content || '')}`;
-                
+
                 // If there's SQL, show it in a code block
                 if (step.sql) {
                     contentHtml += `<div class="step-sql">${escapeHtml(step.sql)}</div>`;
                 }
-                
+
                 return `
                     <div class="thinking-step">
                         <div class="step-icon ${iconClass}">${icon}</div>
@@ -1357,7 +1384,7 @@
                     </div>
                 `;
             }).join('');
-            
+
             return `
                 <div class="thinking-chain">
                     <div class="thinking-header" onclick="toggleThinking('${thinkingId}')">
@@ -1376,7 +1403,7 @@
         /**
          * Toggle thinking chain visibility
          */
-        window.toggleThinking = function(id) {
+        window.toggleThinking = function (id) {
             const steps = document.getElementById(id);
             const header = steps.previousElementSibling;
             steps.classList.toggle('hidden');
@@ -1401,7 +1428,7 @@
             if (num === null || num === undefined) return '-';
             const numValue = typeof num === 'number' ? num : parseFloat(num);
             if (isNaN(numValue)) return String(num);
-            
+
             // If it's a monetary field, format as currency
             if (isMonetaryField(fieldName)) {
                 if (numValue >= 1000000) {
@@ -1412,7 +1439,7 @@
                 }
                 return Math.round(numValue).toLocaleString('es-CO');
             }
-            
+
             // For non-monetary numbers, keep original logic but without decimals
             if (numValue >= 1000000) return Math.round(numValue / 1000000) + 'M';
             if (numValue >= 1000) return Math.round(numValue / 1000) + 'K';
@@ -1489,13 +1516,13 @@
          */
         function generateCSV(data, title = 'datos') {
             if (!data || !data.columns || !data.rows) return null;
-            
+
             const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
             let csv = BOM;
-            
+
             // Header row
             csv += data.columns.map(col => `"${String(col).replace(/"/g, '""')}"`).join(',') + '\n';
-            
+
             // Data rows
             data.rows.forEach(row => {
                 csv += row.map(cell => {
@@ -1508,7 +1535,7 @@
                     return cellStr;
                 }).join(',') + '\n';
             });
-            
+
             return csv;
         }
 
@@ -1523,13 +1550,13 @@
                 alert('No hay datos para descargar');
                 return;
             }
-            
+
             try {
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.setAttribute('href', url);
-                link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0,10)}.csv`);
+                link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -1546,40 +1573,11 @@
         window.downloadCSV = downloadCSV;
 
         /**
-         * Render download button for CSV
+         * Render download button for CSV - DISABLED
          */
         function renderDownloadButton(data, title, totalRecords) {
-            if (!data || !data.columns || !data.rows || data.rows.length === 0) return '';
-            
-            const downloadId = `csvData_${++chartCounter}`;
-            const filename = title ? title.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s]/g, '').replace(/\s+/g, '_').toLowerCase() : 'datos';
-            
-            // Store data for download in global scope
-            window[downloadId] = { data, filename };
-            
-            return `
-                <div class="download-section mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <span class="text-sm text-blue-800">
-                                <strong>${totalRecords} registros</strong> disponibles para descargar
-                            </span>
-                        </div>
-                        <button 
-                            onclick="window.downloadCSV(window.${downloadId}.data, window.${downloadId}.filename)"
-                            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Descargar CSV
-                        </button>
-                    </div>
-                </div>
-            `;
+            // CSV download disabled for performance
+            return '';
         }
 
         /**
@@ -1588,7 +1586,7 @@
         function renderVisualization(vizConfig) {
             console.log('[renderVisualization] Called with type:', vizConfig?.type, 'visualizable:', vizConfig?.visualizable);
             console.log('[renderVisualization] Data:', vizConfig?.data?.rows?.length, 'rows');
-            
+
             const { type, title, data, fullData, isTop10, totalRecords, summary } = vizConfig;
             const chartId = `chart-${++chartCounter}`;
 
@@ -1615,12 +1613,12 @@
             }
 
             // Top 10 indicator
-            const top10Note = isTop10 && totalRecords > 10 
-                ? `<div class="text-xs text-gray-500 mt-1 ml-1 italic">Mostrando Top 10 de ${totalRecords} registros totales</div>` 
+            const top10Note = isTop10 && totalRecords > 10
+                ? `<div class="text-xs text-gray-500 mt-1 ml-1 italic">Mostrando Top 10 de ${totalRecords} registros totales</div>`
                 : '';
 
             // Download button if there are more records
-            const downloadButton = hasMoreData && downloadData 
+            const downloadButton = hasMoreData && downloadData
                 ? renderDownloadButton(downloadData, title, totalRecords)
                 : '';
 
@@ -1643,7 +1641,7 @@
                 if (chartDom) {
                     const chart = echarts.init(chartDom);
                     chart.setOption(chartConfig);
-                    
+
                     // Handle resize
                     window.addEventListener('resize', () => chart.resize());
                 }
@@ -1679,15 +1677,15 @@
                     timestamp: new Date().toISOString(),
                     biData: biData // Store Generative BI data if available
                 };
-                
+
                 messages.push(messageData);
-                
+
                 // Limit to last 100 messages to prevent storage overflow
                 const maxMessages = 50;
                 if (messages.length > maxMessages) {
                     messages.splice(0, messages.length - maxMessages);
                 }
-                
+
                 // Check storage size
                 const dataStr = JSON.stringify(messages);
                 if (dataStr.length > MAX_STORAGE_SIZE) {
@@ -1696,7 +1694,7 @@
                         messages.shift();
                     }
                 }
-                
+
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
                 console.log('[Storage] Message saved, total messages:', messages.length);
             } catch (e) {
@@ -1752,7 +1750,7 @@
         /**
          * Clear chat history and reload page
          */
-        window.clearChatHistoryAndReload = function() {
+        window.clearChatHistoryAndReload = function () {
             if (confirm('¿Estás seguro de que quieres limpiar todo el historial de conversación? Esta acción no se puede deshacer.')) {
                 clearChatHistory();
                 location.reload();
@@ -1792,10 +1790,10 @@
             }
 
             console.log('[Storage] Restoring', messages.length, 'messages');
-            
+
             // Clear container first
             messagesContainer.innerHTML = '';
-            
+
             // Restore each message
             messages.forEach(msg => {
                 // Parse Generative BI data if present
@@ -1803,14 +1801,14 @@
                 if (msg.biData) {
                     biData = msg.biData;
                 }
-                
+
                 // Render message (reuse addMessage but skip saving to avoid duplicate)
                 renderMessageFromStorage(msg.text, msg.type, biData);
             });
-            
+
             // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
+
             return true; // History was restored
         }
 
@@ -1819,11 +1817,11 @@
          */
         function renderMessageFromStorage(text, type, biData = null) {
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            
+
             const messageDiv = document.createElement('div');
             let vizConfig = null; // Store viz config for later initialization
             let chartId = null; // Store chart ID for initialization
-            
+
             if (type === 'system') {
                 messageDiv.className = 'flex justify-center';
                 messageDiv.innerHTML = `
@@ -1855,49 +1853,61 @@
                 if (biData) {
                     const viz = biData.visualization;
                     const thinking = biData.thinking;
-                    
-                    // Store viz config for initialization after DOM insertion
-                    if (viz && viz.visualizable) {
-                        vizConfig = viz;
+
+                    // NEW: Build viz config that includes data from root level
+                    // biData.visualizable is at root, biData.data has the structured data
+                    if (biData.visualizable === true && biData.data && biData.data.rows && biData.data.rows.length > 0) {
+                        // Merge data into visualization config for chart rendering
+                        vizConfig = {
+                            ...viz,
+                            data: biData.data,
+                            visualizable: true
+                        };
                     }
-                    
+
                     // Render thinking chain if available
                     if (thinking && thinking.length > 0) {
                         thinkingHtml = renderThinkingChain(thinking);
                     }
-                    
+
                     // Render the visualization HTML (but don't initialize chart yet)
-                    if (viz) {
-                        const result = renderVisualizationHTML(viz);
+                    if (vizConfig && vizConfig.visualizable) {
+                        const result = renderVisualizationHTML(vizConfig);
                         visualizationHtml = result.html;
                         chartId = result.chartId;
                     }
-                    
-                    // Use stored text
-                    messageContent = biData.text || text;
+
+                    // NEW: Use conclusion (summary) as the main text, fallback to stored text
+                    messageContent = biData.conclusion || biData.text || text;
                 } else {
                     // Try to parse Generative BI from text
                     const biResult = parseGenerativeBIResponse(text);
                     if (biResult.hasVisualization || biResult.biData) {
-                        const viz = biResult.biData?.visualization;
-                        const thinking = biResult.biData?.thinking;
-                        
-                        // Store viz config for initialization after DOM insertion
-                        if (viz && viz.visualizable) {
-                            vizConfig = viz;
+                        const biDataParsed = biResult.biData;
+                        const viz = biDataParsed?.visualization;
+                        const thinking = biDataParsed?.thinking;
+
+                        // NEW: Build viz config from parsed data
+                        if (biDataParsed?.visualizable === true && biDataParsed?.data?.rows?.length > 0) {
+                            vizConfig = {
+                                ...viz,
+                                data: biDataParsed.data,
+                                visualizable: true
+                            };
                         }
-                        
+
                         if (thinking && thinking.length > 0) {
                             thinkingHtml = renderThinkingChain(thinking);
                         }
-                        
-                        if (viz) {
-                            const result = renderVisualizationHTML(viz);
+
+                        if (vizConfig && vizConfig.visualizable) {
+                            const result = renderVisualizationHTML(vizConfig);
                             visualizationHtml = result.html;
                             chartId = result.chartId;
                         }
-                        
-                        messageContent = biResult.biData?.text || biResult.cleanText;
+
+                        // NEW: Use conclusion as main text
+                        messageContent = biDataParsed?.conclusion || biDataParsed?.text || biResult.cleanText;
                     } else {
                         messageContent = text;
                     }
@@ -1922,10 +1932,10 @@
                     </div>
                 `;
             }
-            
+
             // Insert into DOM first
             messagesContainer.appendChild(messageDiv);
-            
+
             // Initialize chart after DOM insertion if we have a visualization
             if (vizConfig && vizConfig.visualizable && vizConfig.type !== 'table' && vizConfig.type !== 'none' && chartId) {
                 setTimeout(() => {
@@ -1963,12 +1973,12 @@
             }
 
             // Top 10 indicator
-            const top10Note = isTop10 && totalRecords > 10 
-                ? `<div class="text-xs text-gray-500 mt-1 ml-1 italic">Mostrando Top 10 de ${totalRecords} registros totales</div>` 
+            const top10Note = isTop10 && totalRecords > 10
+                ? `<div class="text-xs text-gray-500 mt-1 ml-1 italic">Mostrando Top 10 de ${totalRecords} registros totales</div>`
                 : '';
 
             // Download button if there are more records
-            const downloadButton = hasMoreData && downloadData 
+            const downloadButton = hasMoreData && downloadData
                 ? renderDownloadButton(downloadData, title, totalRecords)
                 : '';
 
@@ -1984,7 +1994,7 @@
                 ${top10Note}
                 ${downloadButton}
             `;
-            
+
             return { html, chartId };
         }
 
@@ -1993,21 +2003,21 @@
          */
         function initializeChartFromStorage(messageDiv, vizConfig, chartId) {
             const chartDom = messageDiv.querySelector(`#${chartId}`);
-            
+
             if (chartDom) {
                 try {
                     const chartConfig = createChartConfig(vizConfig);
                     if (chartConfig) {
                         const chart = echarts.init(chartDom);
                         chart.setOption(chartConfig);
-                        
+
                         // Handle resize
                         const resizeHandler = () => chart.resize();
                         window.addEventListener('resize', resizeHandler);
-                        
+
                         // Store resize handler on chart element for cleanup if needed
                         chartDom._resizeHandler = resizeHandler;
-                        
+
                         console.log('[Storage] Chart initialized from storage:', chartId);
                     }
                 } catch (e) {
@@ -2024,7 +2034,7 @@
 
                 // Try to restore chat history first
                 const historyRestored = restoreChatHistory();
-                
+
                 // Try to restore session ID from storage
                 const storedSessionId = loadSessionId();
                 if (storedSessionId && historyRestored) {
@@ -2107,11 +2117,11 @@
 
         function setTyping(isTyping, customMessage = null) {
             const existingIndicator = document.getElementById('typingIndicator');
-            
+
             if (isTyping && !existingIndicator) {
                 const initialMessage = customMessage || getRandomLoadingMessage();
                 currentMessageIndex = 0;
-                
+
                 const typingDiv = document.createElement('div');
                 typingDiv.id = 'typingIndicator';
                 typingDiv.className = 'flex items-start gap-3';
@@ -2169,17 +2179,17 @@
         function addOrUpdateBotMessage(text, isComplete = false) {
             // Don't create message if text is empty and not complete
             if (!text && !isComplete) return;
-            
+
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            
+
             if (!currentBotMessageElement) {
                 // Create new message element only when we have text
                 if (!text) return;
-                
+
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'flex items-start gap-3';
                 messageDiv.id = `bot-message-${Date.now()}`;
-                
+
                 messageDiv.innerHTML = `
                     <div class="w-10 h-10 bg-iserv-green rounded-full flex items-center justify-center flex-shrink-0">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2195,45 +2205,45 @@
                         <p class="text-xs text-gray-400 mt-1 ml-1">${time}</p>
                     </div>
                 `;
-                
+
                 messagesContainer.appendChild(messageDiv);
                 currentBotMessageElement = messageDiv;
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-            
+
             // Update text content
             const contentDiv = currentBotMessageElement.querySelector('.bot-message-content');
             if (contentDiv && text) {
                 contentDiv.innerHTML = renderMarkdown(text);
             }
-            
+
             // Check for generative-bi block when complete
             if (isComplete && text) {
                 console.log('[v0] Processing complete text, length:', text.length);
                 console.log('[v0] Text includes generative-bi:', text.includes('generative-bi'));
-                
+
                 const biResult = parseGenerativeBIResponse(text);
                 console.log('[v0] biResult:', { hasVisualization: biResult.hasVisualization, hasBiData: !!biResult.biData });
-                
+
                 const vizContainer = currentBotMessageElement.querySelector('.visualization-container');
                 const thinkingContainer = currentBotMessageElement.querySelector('.thinking-chain-container');
-                
+
                 if (biResult.hasVisualization || biResult.biData) {
                     console.log('[v0] Rendering visualization, type:', biResult.biData?.visualization?.type);
                     const viz = biResult.biData?.visualization;
                     const thinking = biResult.biData?.thinking;
-                    
+
                     // Render thinking chain if available
                     if (thinking && thinking.length > 0 && thinkingContainer) {
                         thinkingContainer.innerHTML = renderThinkingChain(thinking);
                     }
-                    
+
                     // Always show the original text from the agent (biData.text has the full response)
                     const originalText = biResult.biData?.text || biResult.cleanText;
                     if (contentDiv && originalText) {
                         contentDiv.innerHTML = renderMarkdown(originalText);
                     }
-                    
+
                     // Render visualization
                     if (viz && vizContainer) {
                         vizContainer.innerHTML = renderVisualization(viz);
@@ -2242,7 +2252,7 @@
                     contentDiv.innerHTML = renderMarkdown(biResult.cleanText);
                 }
             }
-            
+
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
@@ -2305,7 +2315,7 @@
                 const data = await response.json();
                 console.log('[v0] Response received, data type:', typeof data);
                 console.log('[v0] Response keys:', Object.keys(data || {}));
-                
+
                 let agentResponse = 'Disculpa, no pude procesar tu solicitud.';
 
                 // Handle different response formats
@@ -2317,14 +2327,14 @@
                     for (let i = events.length - 1; i >= 0; i--) {
                         const event = events[i];
                         console.log('[v0] Processing event', i, '- author:', event.author, '- has content:', !!event.content);
-                        
+
                         if (event.content && event.content.parts) {
                             for (const part of event.content.parts) {
                                 if (part.text) {
                                     agentResponse = part.text;
-                    console.log('[v0] Found text response, length:', agentResponse.length);
-                                        console.log('[v0] Response preview:', agentResponse.substring(0, 200));
-                                        console.log('[v0] Has generative-bi:', agentResponse.includes('GENERATIVE_BI_START'));
+                                    console.log('[v0] Found text response, length:', agentResponse.length);
+                                    console.log('[v0] Response preview:', agentResponse.substring(0, 200));
+                                    console.log('[v0] Has generative-bi:', agentResponse.includes('GENERATIVE_BI_START'));
                                     break;
                                 }
                             }
@@ -2361,7 +2371,7 @@
         }
 
         // Auto-resize textarea
-        messageInput.addEventListener('input', function() {
+        messageInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
@@ -2376,10 +2386,10 @@
 
 
         // Handle form submission
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             e.preventDefault();
             const message = messageInput.value.trim();
-            
+
             if (message) {
                 sendMessage(message);
                 messageInput.value = '';
@@ -2389,10 +2399,10 @@
 
         function addMessage(text, type, skipSave = false) {
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            
+
             const messageDiv = document.createElement('div');
             let biData = null; // Store Generative BI data for persistence
-            
+
             if (type === 'system') {
                 // System message (centered, different style)
                 messageDiv.className = 'flex justify-center';
@@ -2420,10 +2430,10 @@
                 // Bot message - Check for Generative BI visualization
                 console.log('[addMessage] Bot message, length:', text.length);
                 console.log('[addMessage] Has generative-bi:', text.includes('generative-bi'));
-                
+
                 const biResult = parseGenerativeBIResponse(text);
                 console.log('[addMessage] biResult:', { hasVisualization: biResult.hasVisualization, hasBiData: !!biResult.biData });
-                
+
                 let messageContent = '';
                 let visualizationHtml = '';
                 let thinkingHtml = '';
@@ -2431,21 +2441,21 @@
                 if (biResult.hasVisualization || biResult.biData) {
                     // Store Generative BI data for persistence
                     biData = biResult.biData;
-                    
+
                     const viz = biResult.biData?.visualization;
                     const thinking = biResult.biData?.thinking;
                     console.log('[addMessage] Viz type:', viz?.type, 'Visualizable:', viz?.visualizable);
-                    
+
                     // Render thinking chain if available
                     if (thinking && thinking.length > 0) {
                         thinkingHtml = renderThinkingChain(thinking);
                     }
-                    
+
                     // Render the visualization
                     if (viz) {
                         visualizationHtml = renderVisualization(viz);
                     }
-                    
+
                     // Always show the original text from the agent (biData.text has the full response)
                     messageContent = biResult.biData?.text || biResult.cleanText;
                 } else {
@@ -2471,10 +2481,10 @@
                     </div>
                 `;
             }
-            
+
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
+
             // Save to localStorage (unless explicitly skipped, e.g., when restoring from storage)
             if (!skipSave) {
                 saveMessageToStorage(text, type, biData);
@@ -2496,27 +2506,27 @@
          */
         function renderMarkdown(text) {
             if (!text) return '';
-            
+
             // Convert literal \n sequences to actual newlines (LLM sometimes outputs these as text)
             text = text.replace(/\\n/g, '\n');
             // Clean up excessive newlines
             text = text.replace(/\n{3,}/g, '\n\n');
-            
+
             // Split into lines to process lists properly
             const lines = text.split('\n');
             const processedLines = [];
             let inList = false;
-            
+
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
-                
+
                 // Escape HTML first
                 line = escapeHtml(line);
-                
+
                 // Check if it's a list item
                 const listMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
                 const numberedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
-                
+
                 if (listMatch || numberedMatch) {
                     if (!inList) {
                         processedLines.push('<ul class="markdown-list">');
@@ -2538,11 +2548,11 @@
                     }
                 }
             }
-            
+
             if (inList) {
                 processedLines.push('</ul>');
             }
-            
+
             // Join content - lists don't need <br>, text lines do
             let result = '';
             for (let i = 0; i < processedLines.length; i++) {
@@ -2563,11 +2573,11 @@
         function processInlineMarkdown(text) {
             // Convert **bold** to <strong>
             text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            
+
             // Convert *italic* to <em> (but not if it's part of **bold**)
             // Use negative lookbehind/lookahead to avoid conflicts
             text = text.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
-            
+
             return text;
         }
 
@@ -2625,7 +2635,7 @@
                 btn.className = 'prompt-btn';
                 btn.setAttribute('data-prompt', prompt.text);
                 btn.setAttribute('title', prompt.text);
-                
+
                 // Highlight the key term in the text
                 let displayText = prompt.text;
                 if (prompt.highlight) {
@@ -2657,7 +2667,7 @@
             // Producto search
             const productoInput = document.getElementById('productoSearch');
             const productoList = document.getElementById('productoList');
-            
+
             if (productoInput && productoList) {
                 productoInput.addEventListener('input', (e) => {
                     clearTimeout(searchTimeout);
@@ -2676,7 +2686,7 @@
             // Proveedor search
             const proveedorInput = document.getElementById('proveedorSearch');
             const proveedorList = document.getElementById('proveedorList');
-            
+
             if (proveedorInput && proveedorList) {
                 proveedorInput.addEventListener('input', (e) => {
                     clearTimeout(searchTimeout);
@@ -2804,7 +2814,7 @@
 
         function selectProducto(producto) {
             selectedProducto = producto;
-            
+
             // Update input
             const input = document.getElementById('productoSearch');
             if (input) {
@@ -2823,7 +2833,7 @@
                 templates.querySelectorAll('.query-template-btn').forEach(btn => {
                     btn.disabled = false;
                 });
-                
+
                 // Update display names (truncate if too long)
                 const displayName = producto.length > 25 ? producto.substring(0, 25) + '...' : producto;
                 document.getElementById('selectedProductoName').textContent = displayName;
@@ -2833,7 +2843,7 @@
 
         function selectProveedor(proveedor) {
             selectedProveedor = proveedor;
-            
+
             // Update input
             const input = document.getElementById('proveedorSearch');
             if (input) {
@@ -2852,7 +2862,7 @@
                 templates.querySelectorAll('.query-template-btn').forEach(btn => {
                     btn.disabled = false;
                 });
-                
+
                 // Update display names (truncate if too long)
                 const displayName = proveedor.length > 20 ? proveedor.substring(0, 20) + '...' : proveedor;
                 document.getElementById('selectedProveedorName').textContent = displayName;
@@ -2862,7 +2872,7 @@
 
         function executeTemplate(template) {
             let query = '';
-            
+
             switch (template) {
                 case 'producto-precios':
                     if (selectedProducto) {
@@ -2894,12 +2904,12 @@
         function sendSuggestedPrompt(text) {
             // Close the panel
             togglePromptsPanel(false);
-            
+
             // Set the text in the input and send
             messageInput.value = text;
             messageInput.style.height = 'auto';
             messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-            
+
             // Send the message
             sendMessage(text);
             messageInput.value = '';
@@ -2909,11 +2919,11 @@
         function togglePromptsPanel(forceState = null) {
             const toggle = document.getElementById('promptsToggle');
             const container = document.getElementById('promptsContainer');
-            
+
             if (!toggle || !container) return;
 
             const shouldShow = forceState !== null ? forceState : !container.classList.contains('show');
-            
+
             if (shouldShow) {
                 container.classList.add('show');
                 toggle.classList.add('active');
@@ -2925,7 +2935,7 @@
 
         // Initialize prompts panel on page load
         document.addEventListener('DOMContentLoaded', createPromptButtons);
-        
+
         // If DOM is already loaded, create buttons now
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             setTimeout(createPromptButtons, 100);
@@ -2937,7 +2947,8 @@
         <div id="promptsContainer" class="suggested-prompts-container">
             <div class="suggested-prompts-header">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
                 <span>Consultas Sugeridas</span>
             </div>
@@ -2946,20 +2957,17 @@
             <div class="dropdown-section">
                 <div class="dropdown-label">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                     <span>Buscar Producto</span>
                 </div>
                 <div class="search-dropdown">
-                    <input 
-                        type="text" 
-                        id="productoSearch" 
-                        class="search-input" 
-                        placeholder="Ej: ALAMBRE, CABLE, TUBO..."
-                        autocomplete="off"
-                    >
+                    <input type="text" id="productoSearch" class="search-input"
+                        placeholder="Ej: ALAMBRE, CABLE, TUBO..." autocomplete="off">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <div id="productoList" class="dropdown-list"></div>
                 </div>
@@ -2977,20 +2985,17 @@
             <div class="dropdown-section">
                 <div class="dropdown-label">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     <span>Buscar Proveedor</span>
                 </div>
                 <div class="search-dropdown">
-                    <input 
-                        type="text" 
-                        id="proveedorSearch" 
-                        class="search-input" 
-                        placeholder="Ej: RYMEL, CABLECOL..."
-                        autocomplete="off"
-                    >
+                    <input type="text" id="proveedorSearch" class="search-input" placeholder="Ej: RYMEL, CABLECOL..."
+                        autocomplete="off">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <div id="proveedorList" class="dropdown-list"></div>
                 </div>
@@ -3009,16 +3014,14 @@
             <!-- Prompt buttons will be inserted here by JavaScript -->
             <div id="quickPromptsContainer"></div>
         </div>
-        <button 
-            id="promptsToggle" 
-            class="suggested-prompts-toggle" 
-            onclick="togglePromptsPanel()"
-            title="Ver consultas sugeridas"
-        >
+        <button id="promptsToggle" class="suggested-prompts-toggle" onclick="togglePromptsPanel()"
+            title="Ver consultas sugeridas">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
         </button>
     </div>
 </body>
+
 </html>

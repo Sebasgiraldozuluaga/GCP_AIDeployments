@@ -93,6 +93,14 @@ Con esta integración, tu agente puede:
 
 ## 🔍 Troubleshooting
 
+### ✅ Event Loop Errors (Completamente Resueltos v1.2)
+
+Los errores de event loop han sido **completamente eliminados** usando arquitectura síncrona pura:
+- ❌ `asyncio.run() cannot be called from a running event loop` → **Resuelto**
+- ❌ `Event loop is closed` → **Resuelto**
+
+**Arquitectura v1.2**: Cliente HTTP síncrono, sin async/await, funciona en todos los contextos.
+
 ### ⚠️ "Hugging Face MCP integration disabled"
 
 **Causa**: Secret `HF_TOKEN` no está configurado

@@ -3,14 +3,90 @@ Hugging Face Tools for Google ADK Agent
 Provides HF Hub search and exploration capabilities as agent tools
 """
 
-import asyncio
 import json
 import logging
+import time
+from functools import lru_cache
 from typing import Optional
 
 from app.hf_mcp_client import get_hf_client
 
 logger = logging.getLogger(__name__)
+
+# ============================================
+# Cache Configuration
+# ============================================
+CACHE_TTL_SECONDS = 300  # 5 minutes TTL for search results
+CACHE_MAX_SIZE = 128  # Max cached entries
+
+
+def _get_cache_key_time_bucket() -> int:
+    """Get time bucket for TTL-based cache invalidation (5 min buckets)."""
+    return int(time.time() // CACHE_TTL_SECONDS)
+
+
+@lru_cache(maxsize=CACHE_MAX_SIZE)
+def _cached_search_models(
+    query: str,
+    limit: int,
+    task: Optional[str],
+    library: Optional[str],
+    _time_bucket: int  # For TTL invalidation
+) -> dict:
+    """Cached version of model search."""
+    client = get_hf_client()
+    return client.search_models(
+        query=query,
+        limit=limit,
+        filter_task=task,
+        filter_library=library
+    )
+
+
+@lru_cache(maxsize=CACHE_MAX_SIZE)
+def _cached_search_datasets(
+    query: str,
+    limit: int,
+    task: Optional[str],
+    _time_bucket: int
+) -> dict:
+    """Cached version of dataset search."""
+    client = get_hf_client()
+    return client.search_datasets(
+        query=query,
+        limit=limit,
+        filter_task=task
+    )
+
+
+@lru_cache(maxsize=CACHE_MAX_SIZE)
+def _cached_search_spaces(
+    query: str,
+    limit: int,
+    sdk: Optional[str],
+    _time_bucket: int
+) -> dict:
+    """Cached version of spaces search."""
+    client = get_hf_client()
+    return client.search_spaces(
+        query=query,
+        limit=limit,
+        filter_sdk=sdk
+    )
+
+
+@lru_cache(maxsize=64)
+def _cached_model_info(model_id: str, _time_bucket: int) -> dict:
+    """Cached version of model info."""
+    client = get_hf_client()
+    return client.get_model_info(model_id)
+
+
+@lru_cache(maxsize=64)
+def _cached_dataset_info(dataset_id: str, _time_bucket: int) -> dict:
+    """Cached version of dataset info."""
+    client = get_hf_client()
+    return client.get_dataset_info(dataset_id)
 
 
 def search_hf_models(
@@ -51,24 +127,15 @@ def search_hf_models(
         # Validate and cap limit
         limit = min(max(1, limit), 20)
 
-        # Run async function in event loop
-        client = get_hf_client()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # If loop is already running, create a new one
-            result = asyncio.run(client.search_models(
-                query=query,
-                limit=limit,
-                filter_task=task,
-                filter_library=library
-            ))
-        else:
-            result = loop.run_until_complete(client.search_models(
-                query=query,
-                limit=limit,
-                filter_task=task,
-                filter_library=library
-            ))
+        # Call cached search (TTL-based invalidation)
+        time_bucket = _get_cache_key_time_bucket()
+        result = _cached_search_models(
+            query=query,
+            limit=limit,
+            task=task,
+            library=library,
+            _time_bucket=time_bucket
+        )
 
         # Format results for agent
         if result["success"]:
@@ -140,20 +207,14 @@ def search_hf_datasets(
     try:
         limit = min(max(1, limit), 20)
 
-        client = get_hf_client()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            result = asyncio.run(client.search_datasets(
-                query=query,
-                limit=limit,
-                filter_task=task
-            ))
-        else:
-            result = loop.run_until_complete(client.search_datasets(
-                query=query,
-                limit=limit,
-                filter_task=task
-            ))
+        # Call cached search (TTL-based invalidation)
+        time_bucket = _get_cache_key_time_bucket()
+        result = _cached_search_datasets(
+            query=query,
+            limit=limit,
+            task=task,
+            _time_bucket=time_bucket
+        )
 
         if result["success"]:
             datasets = result.get("datasets", [])
@@ -220,20 +281,14 @@ def search_hf_spaces(
     try:
         limit = min(max(1, limit), 20)
 
-        client = get_hf_client()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            result = asyncio.run(client.search_spaces(
-                query=query,
-                limit=limit,
-                filter_sdk=sdk
-            ))
-        else:
-            result = loop.run_until_complete(client.search_spaces(
-                query=query,
-                limit=limit,
-                filter_sdk=sdk
-            ))
+        # Call cached search (TTL-based invalidation)
+        time_bucket = _get_cache_key_time_bucket()
+        result = _cached_search_spaces(
+            query=query,
+            limit=limit,
+            sdk=sdk,
+            _time_bucket=time_bucket
+        )
 
         if result["success"]:
             spaces = result.get("spaces", [])
@@ -292,13 +347,9 @@ def get_hf_model_details(model_id: str) -> str:
         get_hf_model_details("bert-base-uncased")
     """
     try:
-        client = get_hf_client()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            result = asyncio.run(client.get_model_info(model_id))
-        else:
-            result = loop.run_until_complete(client.get_model_info(model_id))
-
+        # Call cached model info (TTL-based invalidation)
+        time_bucket = _get_cache_key_time_bucket()
+        result = _cached_model_info(model_id, time_bucket)
         return json.dumps(result, indent=2, ensure_ascii=False)
 
     except Exception as e:
@@ -334,13 +385,9 @@ def get_hf_dataset_details(dataset_id: str) -> str:
         get_hf_dataset_details("squad")
     """
     try:
-        client = get_hf_client()
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            result = asyncio.run(client.get_dataset_info(dataset_id))
-        else:
-            result = loop.run_until_complete(client.get_dataset_info(dataset_id))
-
+        # Call cached dataset info (TTL-based invalidation)
+        time_bucket = _get_cache_key_time_bucket()
+        result = _cached_dataset_info(dataset_id, time_bucket)
         return json.dumps(result, indent=2, ensure_ascii=False)
 
     except Exception as e:

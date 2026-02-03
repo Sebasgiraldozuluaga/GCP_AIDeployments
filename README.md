@@ -38,6 +38,45 @@ make install && make playground
 ```
 > **📊 Observability Note:** Agent telemetry (Cloud Trace) is always enabled. Prompt-response logging (GCS, BigQuery, Cloud Logging) is **disabled** locally, **enabled by default** in deployed environments (metadata only - no prompts/responses). See [Monitoring and Observability](#monitoring-and-observability) for details.
 
+## Features
+
+### 🤗 Hugging Face MCP Integration
+
+This agent includes full integration with Hugging Face Hub via Model Context Protocol (MCP):
+
+**Available Tools:**
+- `search_hf_models` - Search for AI models (transformers, diffusion, etc.)
+- `search_hf_datasets` - Find datasets for training and evaluation
+- `search_hf_spaces` - Discover Gradio/Streamlit apps and demos
+- `get_hf_model_details` - Get detailed model information
+- `get_hf_dataset_details` - Get detailed dataset information
+
+**Quick Setup:**
+1. Get token: https://huggingface.co/settings/tokens (Read-only is sufficient)
+2. Add to `.env`: `HF_TOKEN=hf_xxxxxxxxxxxxx`
+3. For Cloud Run: Add `HF_TOKEN` to GitHub Secrets
+
+**Documentation:**
+- [Quick Start Guide](SETUP_QUICK_START.md) - 3-step setup
+- [Technical Documentation](HUGGINGFACE_INTEGRATION.md) - Complete integration guide
+- [Secrets Setup](/.github/SECRETS_SETUP.md) - GitHub Actions configuration
+
+**Example Usage:**
+```
+User: "Search for sentiment analysis models in Spanish"
+Agent: [Automatically uses search_hf_models tool]
+
+User: "What datasets exist for question answering?"
+Agent: [Uses search_hf_datasets tool]
+```
+
+### 🗄️ PostgreSQL Database Integration
+
+The agent can query a PostgreSQL database using natural language:
+- Automatic SQL generation from questions
+- Intelligent visualization recommendations
+- Support for complex queries and aggregations
+
 ## Commands
 
 | Command              | Description                                                                                 |

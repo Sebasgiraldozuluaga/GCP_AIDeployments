@@ -29,6 +29,9 @@ class HuggingFaceMCPClient:
     - Datasets: Find and analyze datasets
     - Spaces: Interact with Gradio apps and demos
     - Papers: Access research papers
+
+    Note: Uses synchronous httpx.Client for compatibility with Google ADK tools
+    and to avoid event loop issues in FastAPI context.
     """
 
     def __init__(
@@ -49,12 +52,13 @@ class HuggingFaceMCPClient:
         self.token = token or os.getenv("HF_TOKEN")
         self.timeout = timeout
 
-        # Set up HTTP client with auth headers
+        # Set up synchronous HTTP client with auth headers
         headers = {}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
-        self.client = httpx.AsyncClient(
+        # Use synchronous client to avoid event loop issues
+        self.client = httpx.Client(
             timeout=timeout,
             headers=headers,
             follow_redirects=True
@@ -62,7 +66,7 @@ class HuggingFaceMCPClient:
 
         logger.info(f"Initialized HF MCP Client with base URL: {self.base_url}")
 
-    async def search_models(
+    def search_models(
         self,
         query: str,
         limit: int = 10,
@@ -94,7 +98,7 @@ class HuggingFaceMCPClient:
             if filter_library:
                 params["library"] = filter_library
 
-            response = await self.client.get(
+            response = self.client.get(
                 f"https://huggingface.co/api/models",
                 params=params
             )
@@ -116,7 +120,7 @@ class HuggingFaceMCPClient:
                 "query": query
             }
 
-    async def search_datasets(
+    def search_datasets(
         self,
         query: str,
         limit: int = 10,
@@ -144,7 +148,7 @@ class HuggingFaceMCPClient:
             if filter_task:
                 params["filter"] = f"task:{filter_task}"
 
-            response = await self.client.get(
+            response = self.client.get(
                 f"https://huggingface.co/api/datasets",
                 params=params
             )
@@ -166,7 +170,7 @@ class HuggingFaceMCPClient:
                 "query": query
             }
 
-    async def search_spaces(
+    def search_spaces(
         self,
         query: str,
         limit: int = 10,
@@ -191,7 +195,7 @@ class HuggingFaceMCPClient:
             if filter_sdk:
                 params["filter"] = f"sdk:{filter_sdk}"
 
-            response = await self.client.get(
+            response = self.client.get(
                 f"https://huggingface.co/api/spaces",
                 params=params
             )
@@ -213,7 +217,7 @@ class HuggingFaceMCPClient:
                 "query": query
             }
 
-    async def get_model_info(self, model_id: str) -> Dict[str, Any]:
+    def get_model_info(self, model_id: str) -> Dict[str, Any]:
         """
         Get detailed information about a specific model.
 
@@ -224,7 +228,7 @@ class HuggingFaceMCPClient:
             Dictionary with model information
         """
         try:
-            response = await self.client.get(
+            response = self.client.get(
                 f"https://huggingface.co/api/models/{model_id}"
             )
             response.raise_for_status()
@@ -244,7 +248,7 @@ class HuggingFaceMCPClient:
                 "model_id": model_id
             }
 
-    async def get_dataset_info(self, dataset_id: str) -> Dict[str, Any]:
+    def get_dataset_info(self, dataset_id: str) -> Dict[str, Any]:
         """
         Get detailed information about a specific dataset.
 
@@ -255,7 +259,7 @@ class HuggingFaceMCPClient:
             Dictionary with dataset information
         """
         try:
-            response = await self.client.get(
+            response = self.client.get(
                 f"https://huggingface.co/api/datasets/{dataset_id}"
             )
             response.raise_for_status()
@@ -275,17 +279,17 @@ class HuggingFaceMCPClient:
                 "dataset_id": dataset_id
             }
 
-    async def close(self):
+    def close(self):
         """Close the HTTP client"""
-        await self.client.aclose()
+        self.client.close()
 
-    async def __aenter__(self):
-        """Async context manager entry"""
+    def __enter__(self):
+        """Context manager entry"""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
-        await self.close()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit"""
+        self.close()
 
 
 # Global client instance (lazy initialization)
