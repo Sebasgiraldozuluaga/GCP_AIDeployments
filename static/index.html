@@ -2590,24 +2590,29 @@
         // Quick prompts (shorter list for the bottom)
         const quickPrompts = [
             {
-                text: "Total de compras por proveedor diciembre 2025",
-                icon: "cart",
-                highlight: "compras por proveedor"
-            },
-            {
-                text: "centro de costos ultima semana",
+                text: "¿Cuál es el % de ejecución del proyecto PRIMAVERA vs presupuesto?",
                 icon: "chart",
-                highlight: "centro de costos"
+                highlight: "% de ejecución"
             },
             {
-                text: "facturas de los ultimos 3 meses por proyecto valor",
-                icon: "invoice",
-                highlight: "facturas"
+                text: "Top 5 proyectos con mayor gasto este año y su proveedor principal",
+                icon: "trending",
+                highlight: "mayor gasto"
             },
             {
-                text: "presupuesto en GAB DEL PROYECTO PIAMONTE",
+                text: "Analiza la variación de precio del cable 12 THHN en últimas compras",
                 icon: "money",
-                highlight: "presupuesto"
+                highlight: "variación de precio"
+            },
+            {
+                text: "¿Cuál es el valor total del inventario actual en PIAMONTE?",
+                icon: "building",
+                highlight: "valor total del inventario"
+            },
+            {
+                text: "Resumen de compras de la última semana por categoría",
+                icon: "invoice",
+                highlight: "Resumen de compras"
             }
         ];
 
@@ -2876,22 +2881,22 @@
             switch (template) {
                 case 'producto-precios':
                     if (selectedProducto) {
-                        query = `${selectedProducto} dame los precios de las facturas y su estadistica descriptivo`;
+                        query = `Analiza la tendencia de precios, variación y proveedores principales de ${selectedProducto} (incluye estadística descriptiva)`;
                     }
                     break;
                 case 'producto-compras':
                     if (selectedProducto) {
-                        query = `COMPRAS MES A MES DE ${selectedProducto}`;
+                        query = `Histórico de compras de ${selectedProducto}: volumen total mensual y proyectos donde se usa`;
                     }
                     break;
                 case 'proveedor-facturas':
                     if (selectedProveedor) {
-                        query = `${selectedProveedor} facturas por mes`;
+                        query = `Análisis 360 de ${selectedProveedor}: facturación mensual, tendencias y proyectos asociados`;
                     }
                     break;
                 case 'proveedor-compras':
                     if (selectedProveedor) {
-                        query = `Total de compras de ${selectedProveedor} ultimo año`;
+                        query = `Métricas clave de ${selectedProveedor}: Total comprado, ticket promedio y frecuencia de compra`;
                     }
                     break;
             }
@@ -2973,10 +2978,10 @@
                 </div>
                 <div class="query-templates" id="productoTemplates">
                     <button class="query-template-btn" data-template="producto-precios" disabled>
-                        📊 Precios y estadística de <strong id="selectedProductoName">selecciona producto</strong>
+                        📊 Tendencia precios y stock: <strong id="selectedProductoName">selecciona producto</strong>
                     </button>
                     <button class="query-template-btn" data-template="producto-compras" disabled>
-                        🛒 Compras mensuales de <strong id="selectedProductoName2">selecciona producto</strong>
+                        🛒 Histórico de compras: <strong id="selectedProductoName2">selecciona producto</strong>
                     </button>
                 </div>
             </div>
@@ -3001,10 +3006,10 @@
                 </div>
                 <div class="query-templates" id="proveedorTemplates">
                     <button class="query-template-btn" data-template="proveedor-facturas" disabled>
-                        📄 Facturas por mes de <strong id="selectedProveedorName">selecciona proveedor</strong>
+                        📄 Análisis 360 y facturación: <strong id="selectedProveedorName">selecciona proveedor</strong>
                     </button>
                     <button class="query-template-btn" data-template="proveedor-compras" disabled>
-                        💰 Total compras de <strong id="selectedProveedorName2">selecciona proveedor</strong>
+                        💰 Métricas clave y compras: <strong id="selectedProveedorName2">selecciona proveedor</strong>
                     </button>
                 </div>
             </div>
