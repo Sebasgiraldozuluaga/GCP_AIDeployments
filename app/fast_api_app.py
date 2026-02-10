@@ -14,14 +14,22 @@
 
 import os
 import warnings
-from typing import Optional
-from fastapi import FastAPI, Query
+import logging
+from typing import Optional, List
+from contextlib import contextmanager
+
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from google.adk.cli.fast_api import get_fast_api_app
-from app.app_utils.typing import Feedback
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+from google.adk.cli.fast_api import get_fast_api_app
+from app.app_utils.typing import Feedback
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Suppress Telemetry API warnings in local development
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Telemetry API.*")
@@ -29,97 +37,46 @@ warnings.filterwarnings("ignore", category=UserWarning, message=".*Failed to exp
 warnings.filterwarnings("ignore", message=".*LogRecord init with.*trace_id.*span_id.*")
 warnings.filterwarnings("ignore", message=".*LogDeprecatedInitWarning.*")
 
-allow_origins = (
-    os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else ["*"]
-)
+# Constants & Configuration
+ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "").split(",") if os.getenv("ALLOW_ORIGINS") else ["*"]
+LOGS_BUCKET_NAME = os.environ.get("LOGS_BUCKET_NAME")
+ENABLE_OTEL = bool(LOGS_BUCKET_NAME) and os.getenv("ENABLE_OTEL", "false").lower() == "true"
 
-# Artifact bucket for ADK (created by Terraform, passed via env var)
-logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+INDEX_HTML_PATH = os.path.join(STATIC_DIR, "index.html")
 
-AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# In-memory session configuration - no persistent storage
-session_service_uri = None
+ARTIFACT_SERVICE_URI = f"gs://{LOGS_BUCKET_NAME}" if LOGS_BUCKET_NAME else None
 
-artifact_service_uri = f"gs://{logs_bucket_name}" if logs_bucket_name else None
-
-# Only enable cloud telemetry in production (when LOGS_BUCKET_NAME is set)
-# This prevents Telemetry API warnings in local development
-enable_otel = bool(logs_bucket_name) and os.getenv("ENABLE_OTEL", "false").lower() == "true"
-
+# FastAPI App Creation
 app: FastAPI = get_fast_api_app(
-    agents_dir=AGENT_DIR,
+    agents_dir=PROJECT_ROOT,
     web=True,
-    artifact_service_uri=artifact_service_uri,
-    allow_origins=allow_origins,
-    session_service_uri=session_service_uri,
-    otel_to_cloud=enable_otel,
+    artifact_service_uri=ARTIFACT_SERVICE_URI,
+    allow_origins=ALLOW_ORIGINS,
+    session_service_uri=None,
+    otel_to_cloud=ENABLE_OTEL,
 )
+
 app.title = "raju-shop"
 app.description = "API for interacting with the Agent raju-shop"
+app.docs_url = app.redoc_url = app.openapi_url = None
 
-# Disable FastAPI documentation to prevent it from showing on root
-app.docs_url = None
-app.redoc_url = None
-app.openapi_url = None
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Serve static files
-static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# Remove any existing root route that might have been added by get_fast_api_app
-# This ensures our custom route takes precedence
-routes_to_remove = []
-for route in app.routes:
-    if hasattr(route, 'path') and route.path == "/":
-        # Check if it's a GET route (documentation routes are usually GET)
-        if hasattr(route, 'methods') and 'GET' in route.methods:
-            # Skip our own route if it's already there
-            if not (hasattr(route, 'endpoint') and hasattr(route.endpoint, '__name__') and route.endpoint.__name__ == 'read_root'):
-                routes_to_remove.append(route)
-
-for route in routes_to_remove:
-    app.routes.remove(route)
-
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def read_root():
-    """Serve the frontend index.html file with environment variables injected."""
-    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
-    index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        
-        # Inject API_BASE_URL from environment variable if available
-        api_base_url = os.getenv("API_BASE_URL", "")
-        if api_base_url:
-            # Inject meta tag in head section
-            meta_tag = f'    <meta name="api-base-url" content="{api_base_url}">\n'
-            html_content = html_content.replace("</head>", meta_tag + "</head>")
-        
-        return HTMLResponse(content=html_content)
-    return HTMLResponse(content="<html><body>Frontend not found</body></html>", status_code=404)
-
-
-@app.post("/feedback")
-def collect_feedback(feedback: Feedback) -> dict[str, str]:
-    """Collect and log feedback.
-
-    Args:
-        feedback: The feedback data to log
-
-    Returns:
-        Success message
-    """
-    return {"status": "success"}
-
+# Cleanup default routes to prioritize custom "/"
+for route in list(app.routes):
+    if hasattr(route, 'path') and route.path == "/" and 'GET' in getattr(route, 'methods', []):
+        if not (hasattr(route, 'endpoint') and route.endpoint.__name__ == 'read_root'):
+            app.routes.remove(route)
 
 # ============================================
-# Database Helper Functions
+# Database Utilities
 # ============================================
 
 def get_db_connection():
-    """Create a database connection using environment variables."""
+    """Returns a new database connection."""
     return psycopg2.connect(
         host=os.getenv("PG_HOST", "localhost"),
         port=os.getenv("PG_PORT", "5432"),
@@ -129,97 +86,84 @@ def get_db_connection():
         cursor_factory=RealDictCursor
     )
 
+@contextmanager
+def db_session():
+    """Context manager for database connections and cursors."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            yield cursor
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        raise
+    finally:
+        conn.close()
+
+def fetch_distinct_values(table: str, column: str, search: Optional[str] = None, limit: int = 50) -> List[str]:
+    """Generic helper to fetch distinct values from a table/column with optional filtering."""
+    base_query = f"SELECT DISTINCT {column} FROM {table}"
+    
+    if search:
+        query = f"{base_query} WHERE {column} ILIKE %s ORDER BY {column} LIMIT %s"
+        params = (f"%{search}%", limit)
+    else:
+        query = f"{base_query} ORDER BY {column} LIMIT %s"
+        params = (limit,)
+
+    with db_session() as cursor:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        return [row[column] for row in results if row[column]]
 
 # ============================================
-# API Endpoints for Dropdowns
+# API Endpoints
 # ============================================
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def read_root():
+    """Serve the frontend index.html with environment variables injected."""
+    if not os.path.exists(INDEX_HTML_PATH):
+        return HTMLResponse(content="<html><body>Frontend not found</body></html>", status_code=404)
+
+    with open(INDEX_HTML_PATH, "r", encoding="utf-8") as f:
+        html_content = f.read()
+    
+    api_base_url = os.getenv("API_BASE_URL", "")
+    if api_base_url:
+        meta_tag = f'    <meta name="api-base-url" content="{api_base_url}">\n'
+        html_content = html_content.replace("</head>", meta_tag + "</head>")
+    
+    return HTMLResponse(content=html_content)
+
+@app.post("/feedback")
+def collect_feedback(feedback: Feedback) -> dict[str, str]:
+    """Collect and log feedback."""
+    return {"status": "success"}
 
 @app.get("/api/productos")
 async def get_productos(
     search: Optional[str] = Query(None, description="Search term for product name"),
     limit: int = Query(50, description="Maximum number of results")
 ):
-    """Get list of products from catalogo_maestro.descripcion."""
+    """Retrieve distinct product names."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        if search:
-            # Search with ILIKE for case-insensitive partial matching
-            query = """
-                SELECT DISTINCT descripcion 
-                FROM catalogo_maestro 
-                WHERE descripcion ILIKE %s 
-                ORDER BY descripcion 
-                LIMIT %s
-            """
-            cursor.execute(query, (f"%{search}%", limit))
-        else:
-            # Get all products (limited)
-            query = """
-                SELECT DISTINCT descripcion 
-                FROM catalogo_maestro 
-                ORDER BY descripcion 
-                LIMIT %s
-            """
-            cursor.execute(query, (limit,))
-        
-        results = cursor.fetchall()
-        productos = [row["descripcion"] for row in results if row["descripcion"]]
-        
-        cursor.close()
-        conn.close()
-        
+        productos = fetch_distinct_values("catalogo_maestro", "descripcion", search, limit)
         return {"productos": productos, "total": len(productos)}
-    
-    except Exception as e:
-        return {"error": str(e), "productos": []}
-
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error retrieving products")
 
 @app.get("/api/proveedores")
 async def get_proveedores(
     search: Optional[str] = Query(None, description="Search term for provider name"),
     limit: int = Query(50, description="Maximum number of results")
 ):
-    """Get list of providers (razon_social) from proveedor table."""
+    """Retrieve distinct provider names."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        if search:
-            # Search with ILIKE for case-insensitive partial matching
-            query = """
-                SELECT DISTINCT razon_social 
-                FROM proveedor 
-                WHERE razon_social ILIKE %s 
-                ORDER BY razon_social 
-                LIMIT %s
-            """
-            cursor.execute(query, (f"%{search}%", limit))
-        else:
-            # Get all providers (limited)
-            query = """
-                SELECT DISTINCT razon_social 
-                FROM proveedor 
-                ORDER BY razon_social 
-                LIMIT %s
-            """
-            cursor.execute(query, (limit,))
-        
-        results = cursor.fetchall()
-        proveedores = [row["razon_social"] for row in results if row["razon_social"]]
-        
-        cursor.close()
-        conn.close()
-        
+        proveedores = fetch_distinct_values("proveedor", "razon_social", search, limit)
         return {"proveedores": proveedores, "total": len(proveedores)}
-    
-    except Exception as e:
-        return {"error": str(e), "proveedores": []}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error retrieving providers")
 
-
-# Main execution
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
